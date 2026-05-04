@@ -104,7 +104,6 @@ export function AIAnalysis() {
 
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      const model = 'gemini-2.0-flash';
       
       const imageParts = selectedImages.map((img) => ({
         inlineData: { 
@@ -114,7 +113,7 @@ export function AIAnalysis() {
       }));
 
       const response = await ai.models.generateContent({
-        model,
+        model: 'gemini-3-flash-preview',
         contents: [
           {
             parts: [
@@ -126,14 +125,17 @@ export function AIAnalysis() {
         config: { responseMimeType: "application/json" }
       });
 
-      const data = JSON.parse(response.text);
-      setResult(data);
-      setEditDetails({
-        name: `Lungsurin ${data.recommendation === 'UPCYCLE' ? 'Upcycled ' : ''}Garment`,
-        price: getMedianPrice(data.recommendedPrice),
-        description: data.reasoning,
-        stock: '1'
-      });
+      const responseText = response.text;
+      if (responseText) {
+        const data = JSON.parse(responseText);
+        setResult(data);
+        setEditDetails({
+          name: `Lungsurin ${data.recommendation === 'UPCYCLE' ? 'Upcycled ' : ''}Garment`,
+          price: getMedianPrice(data.recommendedPrice),
+          description: data.reasoning,
+          stock: '1'
+        });
+      }
     } catch (error) {
       console.error("AI Error:", error);
       // Fallback for demo if API fails
@@ -179,6 +181,7 @@ export function AIAnalysis() {
     try {
       const productData: Omit<Product, 'id'> = {
         sellerId: user.id,
+        sellerName: user.fullName || 'Anonymous Seller',
         name: editDetails.name || `AI Analyzed ${result.recommendation === 'UPCYCLE' ? 'Upcycled ' : ''}Garment`,
         description: editDetails.description || result.reasoning || "An item analyzed and recommended by Lungsurin AI.",
         price: parseFloat(editDetails.price) || 50,

@@ -1,10 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { collection, query, where, onSnapshot, addDoc, orderBy, serverTimestamp, getDocs, limit, doc, getDoc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
+import { useAuth } from './AuthContext';
+import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
 
 export type Message = {
-  id: number;
+  id: string;
   text: string;
   sender: 'user' | 'seller' | 'ai';
-  time: Date;
+  senderId: string;
+  time: any;
 };
 
 export type Chat = {
@@ -14,77 +19,71 @@ export type Chat = {
   time: string;
   messages: Message[];
   color: string;
+  participants: string[];
 };
 
 interface ChatContextType {
   chats: Chat[];
-  addMessage: (chatId: string, chatName: string, text: string, sender: 'user' | 'seller' | 'ai', color?: string) => void;
+  addMessage: (chatId: string, chatName: string, text: string, sender: 'user' | 'seller' | 'ai', color?: string) => Promise<void>;
   getChat: (chatId: string) => Chat | undefined;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 export function ChatProvider({ children }: { children: React.ReactNode }) {
-  const [chats, setChats] = useState<Chat[]>(() => {
-    const saved = localStorage.getItem('lungsurin_chats');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        // Convert ISO strings back to Date objects
-        return parsed.map((chat: any) => ({
-          ...chat,
-          messages: chat.messages.map((msg: any) => ({
-            ...msg,
-            time: new Date(msg.time)
-          }))
-        }));
-      } catch (e) {
-        console.error("Failed to parse chats", e);
-      }
-    }
-    return [];
-  });
+  const { user } = useAuth();
+  const [chats, setChats] = useState<Chat[]>([]);
 
   useEffect(() => {
-    localStorage.setItem('lungsurin_chats', JSON.stringify(chats));
-  }, [chats]);
+    if (!user) {
+      setChats([]);
+      return;
+    }
 
-  const addMessage = (chatId: string, chatName: string, text: string, sender: 'user' | 'seller' | 'ai', color: string = 'bg-primary-100') => {
-    setChats(prev => {
-      const existingChatIndex = prev.findIndex(c => c.id === chatId);
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-      const newMessage: Message = {
-        id: Date.now(),
-        text,
-        sender,
-        time: now,
-      };
-
-      if (existingChatIndex > -1) {
-        const updatedChats = [...prev];
-        const chat = updatedChats[existingChatIndex];
-        updatedChats[existingChatIndex] = {
-          ...chat,
-          lastMessage: text,
-          time: timeStr,
-          messages: [...chat.messages, newMessage]
+    const q = query(collection(db, 'conversations'), where('participants', 'array-contains', user.id));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const chatList: Chat[] = snapshot.docs.map(d => {
+        const data = d.data();
+        return {
+          id: d.id,
+          name: data.otherPartyName || 'Conversation',
+          lastMessage: data.lastMessage || '',
+          time: data.updatedAt?.toDate().toLocaleTimeString() || '',
+          messages: [],
+          color: 'bg-primary-100',
+          participants: data.participants
         };
-        // Move to top
-        const moved = updatedChats.splice(existingChatIndex, 1)[0];
-        return [moved, ...updatedChats];
-      } else {
-        return [{
-          id: chatId,
-          name: chatName,
-          lastMessage: text,
-          time: timeStr,
-          color,
-          messages: [newMessage]
-        }, ...prev];
-      }
+      });
+      setChats(chatList);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'conversations');
     });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  const addMessage = async (chatId: string, chatName: string, text: string, sender: 'user' | 'seller' | 'ai', color: string = 'bg-primary-100') => {
+    if (!user) return;
+
+    // Check if conversation exists
+    const convRef = doc(db, 'conversations', chatId);
+    const convSnap = await getDoc(convRef);
+
+    if (!convSnap.exists()) {
+      // Logic for new conversation should ideally happen before calling addMessage or here
+    }
+
+    // Add message to subcollection
+    await addDoc(collection(db, 'conversations', chatId, 'messages'), {
+      text,
+      senderId: user.id,
+      senderType: sender,
+      createdAt: serverTimestamp()
+    });
+
+    // Update conversation summary
+    // ...
   };
 
   const getChat = (chatId: string) => chats.find(c => c.id === chatId);

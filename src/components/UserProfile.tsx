@@ -4,7 +4,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { User, Mail, MapPin, Phone, Calendar, LogOut, Edit3, Save, Camera, Shield, MessageSquare, ShoppingBag, Heart, Crown, X, Check } from 'lucide-react';
 import { formatCurrency, formatDate, cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
-import { MOCK_ORDERS } from '../lib/mockData';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { db } from '../lib/firebase';
+import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
 import Cropper, { Area } from 'react-easy-crop';
 
 // Helper to create cropped image
@@ -47,6 +49,20 @@ export function UserProfile() {
   const { user, logout, updateUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState(user);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(true);
+
+  React.useEffect(() => {
+    if (!user) return;
+    const q = query(collection(db, 'orders'), where('userId', '==', user.id));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setOrders(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      setIsLoadingOrders(false);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'orders');
+    });
+    return () => unsubscribe();
+  }, [user]);
   
   // Cropping states
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
@@ -314,7 +330,7 @@ export function UserProfile() {
                 <h4 className="text-4xl font-display font-black uppercase">Riwayat Keuangan</h4>
               </div>
               <div className="item-grid modular-border bg-[#E5E5DE] space-y-px">
-                {MOCK_ORDERS.filter(o => o.userId === user.id).map(order => (
+                {orders.map(order => (
                   <div key={order.id} className="bg-white p-6 md:p-12 flex flex-col md:flex-row md:items-center justify-between group hover:bg-[#F7F7F0] transition-colors gap-6 md:gap-8">
                     <div className="flex items-center gap-4 md:gap-8">
                       <div className="w-12 h-12 md:w-16 md:h-16 modular-border flex items-center justify-center grayscale group-hover:grayscale-0 transition-all shrink-0">

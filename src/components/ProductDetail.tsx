@@ -5,7 +5,6 @@ import {
   Heart, ArrowLeft, ShoppingBag, ShieldCheck, Truck, RefreshCcw, Sparkles, 
   Share2, Star, Minus, Plus, MessageCircle, Store, ChevronRight
 } from 'lucide-react';
-import { MOCK_PRODUCTS } from '../lib/mockData';
 import { useCart } from '../contexts/CartContext';
 import { cn } from '../lib/utils';
 import { doc, getDoc } from 'firebase/firestore';
@@ -17,8 +16,8 @@ import { SellerChat } from './SellerChat';
 export function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [product, setProduct] = useState<Product | undefined>(MOCK_PRODUCTS.find(p => p.id === id));
-  const [isLoading, setIsLoading] = useState(!product);
+  const [product, setProduct] = useState<Product | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(true);
   const { user, updateUser } = useAuth();
   const { cart, addToCart } = useCart();
   const [selectedVariant, setSelectedVariant] = useState<string>('Standard');
@@ -35,7 +34,7 @@ export function ProductDetail() {
 
   useEffect(() => {
     const fetchProduct = async () => {
-      if (!product && id) {
+      if (id) {
         setIsLoading(true);
         try {
           const docRef = doc(db, 'products', id);
@@ -51,7 +50,7 @@ export function ProductDetail() {
       }
     };
     fetchProduct();
-  }, [id, product]);
+  }, [id]);
 
   const toggleFavorite = () => {
     if (!user || !product) {
@@ -336,7 +335,7 @@ export function ProductDetail() {
               
               <div className="space-y-3 flex-1">
                 <div>
-                  <h3 className="font-display font-black text-xl md:text-2xl text-primary-950 leading-none">Lungsurin Archive</h3>
+                  <h3 className="font-display font-black text-xl md:text-2xl text-primary-950 leading-none">{product.sellerName || 'Lungsurin Archive'}</h3>
                   <p className="text-[9px] md:text-[10px] font-black uppercase text-primary-950/40 tracking-tighter mt-1">Official Authorized Node</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -473,7 +472,8 @@ export function ProductDetail() {
       <SellerChat 
         isOpen={isChatOpen} 
         onClose={() => setIsChatOpen(false)} 
-        storeName="Lungsurin Archive"
+        storeName={product?.sellerName || "Lungsurin Archive"}
+        sellerId={product?.sellerId}
       />
     </div>
   );

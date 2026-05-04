@@ -143,7 +143,30 @@ export function PremiumHub() {
   };
 
   const handleUpgrade = async (planId: string) => {
-    setModalStep('upload');
+    if (!user) return;
+    
+    setIsProcessingPayment(true);
+    try {
+      // Set status to pending first so the UI updates
+      await updateUser({ 
+        premiumStatus: 'pending'
+      });
+
+      // Prepare WhatsApp message
+      const message = `Halo Admin Lungsurin, saya ${user.fullName} ingin konfirmasi pembayaran untuk ${selectedPlan?.name}. Berikut bukti transfer saya.`;
+      const encodedMessage = encodeURIComponent(message);
+      const whatsappUrl = `https://wa.me/628119410609?text=${encodedMessage}`;
+      
+      // Redirect to WhatsApp
+      window.open(whatsappUrl, '_blank');
+      
+      setModalStep('waiting');
+    } catch (error) {
+      console.error("Upgrade error:", error);
+      (window as any).addNotification('Gagal memproses upgrade. Silakan coba lagi.', 'error');
+    } finally {
+      setIsProcessingPayment(false);
+    }
   };
 
   const handleUploadProof = async () => {
@@ -238,20 +261,29 @@ export function PremiumHub() {
            <div className="space-y-4">
              <h1 className="text-3xl font-display font-black uppercase">Konfirmasi <br /> Diproses</h1>
              <p className="text-primary-950/60 font-medium leading-relaxed">
-               Bukti transfer Anda telah kami kirimkan ke tim verifikasi di <span className="font-black text-primary-950">rafa100609@gmail.com</span>. 
-               Rafael Alvaro Daniel Gultom akan memverifikasi transaksi Anda segera.
+               Permintaan upgrade Anda sedang kami tinjau. Jika Anda belum mengirim bukti transfer, silakan hubungi admin melalui WhatsApp.
              </p>
            </div>
            <div className="p-4 bg-primary-50 border-2 border-primary-950">
               <p className="text-[10px] font-black uppercase text-primary-500 mb-1">Status Verifikasi</p>
-              <p className="text-sm font-black text-primary-950">MENUNGGU KONFIRMASI MANUAL (rafa100609@gmail.com)</p>
+              <p className="text-sm font-black text-primary-950">MENUNGGU KONFIRMASI MANUAL VIA WA (628119410609)</p>
            </div>
-           <Link 
-            to="/" 
-            className="block py-4 border-2 border-primary-950 font-display font-black uppercase text-xs hover:bg-primary-50 transition-all"
-           >
-            Kembali ke Beranda
-           </Link>
+           <div className="space-y-3">
+             <a 
+              href={`https://wa.me/628119410609?text=${encodeURIComponent("Halo Admin Lungsurin, saya ingin menanyakan status verifikasi Premium saya.")}`}
+              target="_blank"
+              rel="noreferrer"
+              className="block w-full py-4 bg-primary-950 text-white font-display font-black uppercase text-xs hover:bg-primary-800 transition-all"
+             >
+              Hubungi Admin WA
+             </a>
+             <Link 
+              to="/" 
+              className="block py-4 border-2 border-primary-950 font-display font-black uppercase text-xs hover:bg-primary-50 transition-all text-primary-950"
+             >
+              Kembali ke Beranda
+             </Link>
+           </div>
         </div>
       </div>
     );
@@ -402,10 +434,11 @@ export function PremiumHub() {
 
                       <motion.button
                         whileTap={{ scale: 0.95 }}
+                        disabled={isProcessingPayment}
                         onClick={() => selectedPlan && handleUpgrade(selectedPlan.id)}
                         className="w-full py-5 bg-primary-950 text-white font-display font-black uppercase tracking-widest hover:bg-primary-500 transition-all cursor-pointer relative z-[110] shadow-[8px_8px_0px_rgba(0,0,0,0.1)] active:shadow-none active:translate-x-1 active:translate-y-1"
                       >
-                        Saya Sudah Transfer Rp 50.000
+                        {isProcessingPayment ? <Loader2 className="animate-spin mx-auto" size={24} /> : "Saya Sudah Transfer Rp 50.000"}
                       </motion.button>
                     </>
                   )}

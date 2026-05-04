@@ -39,8 +39,22 @@ service cloud.firestore {
              data.price is number && data.price >= 0 &&
              data.category is string &&
              data.sellerId is string &&
+             (!('sellerName' in data) || (data.sellerName is string && data.sellerName.size() <= 200)) &&
              data.images is list && data.images.size() <= 10 &&
              data.stock is number && data.stock >= 0;
+    }
+
+    function isValidConversation(data) {
+      return data.participants is list && data.participants.size() == 2 &&
+             data.participants[0] is string && data.participants[1] is string &&
+             (!('lastMessage' in data) || (data.lastMessage is string && data.lastMessage.size() <= 5000)) &&
+             (!('otherPartyName' in data) || data.otherPartyName is string);
+    }
+
+    function isValidMessage(data) {
+      return data.text is string && data.text.size() <= 5000 &&
+             data.senderId is string &&
+             (!('senderType' in data) || data.senderType in ['user', 'seller', 'ai']);
     }
 
     // --- Collection Rules ---
@@ -92,6 +106,27 @@ service cloud.firestore {
                       incoming().createdAt == request.time;
       allow update: if isSignedIn() && resource.data.userId == request.auth.uid &&
                       incoming().diff(existing()).affectedKeys().hasOnly(['status']);
+    }
+
+    match /conversations/{chatId} {
+      allow read, list: if isSignedIn() && (request.auth.uid in resource.data.participants);
+      allow create: if isSignedIn() && 
+                      isValidConversation(incoming()) && 
+                      (request.auth.uid in incoming().participants) &&
+                      incoming().updatedAt == request.time;
+      allow update: if isSignedIn() && 
+                      (request.auth.uid in existing().participants) &&
+                      incoming().updatedAt == request.time &&
+                      incoming().diff(existing()).affectedKeys().hasOnly(['lastMessage', 'updatedAt', 'otherPartyName']);
+      
+      match /messages/{messageId} {
+        allow read: if isSignedIn() && (request.auth.uid in get(/databases/$(database)/documents/conversations/$(chatId)).data.participants);
+        allow create: if isSignedIn() && 
+                        isValidMessage(incoming()) && 
+                        (request.auth.uid in get(/databases/$(database)/documents/conversations/$(chatId)).data.participants) &&
+                        incoming().senderId == request.auth.uid &&
+                        incoming().createdAt == request.time;
+      }
     }
   }
 }

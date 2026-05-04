@@ -3,15 +3,40 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { Heart, ArrowRight, ShoppingBag, Trash2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { MOCK_PRODUCTS } from '../lib/mockData';
 import { useCart } from '../contexts/CartContext';
-import { cn } from '../lib/utils';
+import { cn, formatRp } from '../lib/utils';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '../lib/firebase';
+import { Product } from '../types';
 
 export function Favorites() {
   const { user, updateUser } = useAuth();
   const { addToCart } = useCart();
+  const [favoriteProducts, setFavoriteProducts] = React.useState<Product[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
   
-  const favoriteProducts = MOCK_PRODUCTS.filter(p => user?.favorites.includes(p.id));
+  React.useEffect(() => {
+    const fetchFavoriteProducts = async () => {
+      if (!user || user.favorites.length === 0) {
+        setFavoriteProducts([]);
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const q = query(collection(db, 'products'), where('__name__', 'in', user.favorites.slice(0, 30)));
+        const snapshot = await getDocs(q);
+        const prods = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
+        setFavoriteProducts(prods);
+      } catch (error) {
+        console.error("Error fetching favorites:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchFavoriteProducts();
+  }, [user?.favorites]);
 
   const removeFavorite = (id: string) => {
     if (!user) return;
@@ -100,7 +125,7 @@ export function Favorites() {
                     
                     <div className="flex items-center justify-between">
                       <span className="text-lg font-display font-black text-primary-950">
-                        ${product.price.toFixed(2)}
+                        {formatRp(product.price * 15000)}
                       </span>
                       <button 
                         onClick={() => handleAddToCart(product)}

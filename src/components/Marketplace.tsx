@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { ShoppingCart, Heart, Search, Filter, Star, ShieldCheck, MessageCircle, Menu, X, Box, Tag, Zap, Info, BookOpen, Crown } from 'lucide-react';
-import { MOCK_PRODUCTS } from '../lib/mockData';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { formatRp, cn } from '../lib/utils';
@@ -49,9 +48,7 @@ export function Marketplace() {
 
   const categories = ['Semua', 'Fashion', 'Aksesoris', 'Rumah', 'Vintage'];
 
-  const allProducts = [...realProducts, ...MOCK_PRODUCTS];
-
-  const filteredProducts = allProducts.filter(p => {
+  const filteredProducts = realProducts.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCat = category === 'All' || p.category === category;
     const hasStock = (p.stock || 0) > 0;
@@ -233,7 +230,11 @@ export function Marketplace() {
               <div className="space-y-4 flex-1 flex flex-col relative z-20 pointer-events-none">
                 <div className="flex justify-between items-start gap-4">
                   <div className="space-y-1">
-                    <p className="text-[10px] font-black tracking-widest text-primary-400 uppercase">{product.category}</p>
+                    <div className="flex items-center gap-2">
+                       <p className="text-[10px] font-black tracking-widest text-primary-400 uppercase">{product.category}</p>
+                       <span className="w-1 h-1 bg-primary-200 rounded-full" />
+                       <p className="text-[10px] font-black tracking-widest text-primary-900/40 uppercase">{product.sellerName || 'Archive'}</p>
+                    </div>
                     <h3 className="text-2xl font-display font-black leading-tight uppercase group-hover:text-primary-500 transition-colors text-primary-900">
                       {product.name}
                     </h3>

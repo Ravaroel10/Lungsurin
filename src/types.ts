@@ -41,6 +41,7 @@ export type AnalysisResult = 'RESELL' | 'REPAIR' | 'UPCYCLE';
 export interface Product {
   id: string;
   sellerId: string;
+  sellerName?: string;
   name: string;
   description: string;
   price: number;

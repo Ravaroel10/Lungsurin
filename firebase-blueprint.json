@@ -32,6 +32,7 @@
       "properties": {
         "id": { "type": "string" },
         "sellerId": { "type": "string" },
+        "sellerName": { "type": "string" },
         "name": { "type": "string" },
         "description": { "type": "string" },
         "price": { "type": "number" },
@@ -65,6 +66,45 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["name", "price", "category", "sellerId"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer orders for products.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "items": { "type": "array", "items": { "type": "object" } },
+        "totalAmount": { "type": "number" },
+        "status": { "type": "string", "enum": ["PROSES", "DIKIRIM", "SELESAI", "DIBATALKAN"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "items", "totalAmount", "status"]
+    },
+    "Conversation": {
+      "title": "Conversation",
+      "description": "Chat conversation between two participants (usually buyer and seller).",
+      "type": "object",
+      "properties": {
+        "participants": { "type": "array", "items": { "type": "string" } },
+        "lastMessage": { "type": "string" },
+        "otherPartyName": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["participants"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "Individual message in a conversation.",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" },
+        "senderId": { "type": "string" },
+        "senderType": { "type": "string", "enum": ["user", "seller", "ai"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["text", "senderId"]
     }
   },
   "firestore": {
@@ -75,6 +115,18 @@
     "products/{productId}": {
       "schema": "Product",
       "description": "Product documents accessible in the marketplace."
+    },
+    "orders/{orderId}": {
+      "schema": "Order",
+      "description": "Order records."
+    },
+    "conversations/{chatId}": {
+      "schema": "Conversation",
+      "description": "Top-level conversation metadata."
+    },
+    "conversations/{chatId}/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Individual chat messages."
     }
   }
 }

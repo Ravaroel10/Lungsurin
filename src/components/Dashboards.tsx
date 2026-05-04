@@ -28,9 +28,9 @@ import {
   UserCheck,
   UserX
 } from 'lucide-react';
-import { collection, query, where, onSnapshot, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, updateDoc, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { MOCK_ORDERS, MOCK_PRODUCTS } from '../lib/mockData';
+import { handleFirestoreError, OperationType } from '../lib/firestoreUtils';
 import { formatCurrency, formatDate, cn } from '../lib/utils';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
 import { motion, AnimatePresence } from 'motion/react';
@@ -120,6 +120,18 @@ export function UserDashboard() {
     nextMilestone: string;
   } | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [orders, setOrders] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+    const q = query(collection(db, 'orders'), where('userId', '==', user.id));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setOrders(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'orders');
+    });
+    return () => unsubscribe();
+  }, [user]);
 
   useEffect(() => {
     if (user && !intelligence && !isGenerating) {
@@ -135,17 +147,8 @@ export function UserDashboard() {
     try {
       const genAI = new GoogleGenAI({ apiKey });
       
-      const userOrders = MOCK_ORDERS.filter(o => o.userId === user.id);
-      
-      const orderDetails = userOrders.flatMap(o => o.items).map(item => {
-        const prod = MOCK_PRODUCTS.find(p => p.id === item.id);
-        return prod ? prod.name : 'Unknown Item';
-      }).join(', ');
-
-      const favoriteItems = (user.favorites || []).map(favId => {
-        const prod = MOCK_PRODUCTS.find(p => p.id === favId);
-        return prod ? prod.name : 'Unknown Item';
-      }).join(', ');
+      const ordersSnap = await getDocs(query(collection(db, 'orders'), where('userId', '==', user.id)));
+      const userOrders = ordersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       
       const prompt = `You are Lungsurin Brain, the User Intelligence system for a circular fashion marketplace in Indonesia.
       Analyze this user data and provide deep insights about their secondary fashion habits and environmental impact.
@@ -154,8 +157,6 @@ export function UserDashboard() {
       - Name: ${user.fullName}
       - Points: ${user.points}
       - Role: ${user.role}
-      - Purchased Items: ${orderDetails || 'None yet'}
-      - Favorited Items: ${favoriteItems || 'None yet'}
       - Total Orders: ${userOrders.length}
       - Favorites count: ${user.favorites?.length || 0} items
       - Premium Member: ${user.isPremium ? 'Yes' : 'No'}
@@ -343,7 +344,7 @@ export function UserDashboard() {
           </div>
 
           <div className="space-y-6 relative z-10">
-            {MOCK_ORDERS.filter(o => o.userId === user.id).slice(0, 2).map((order, i) => (
+            {orders.slice(0, 2).map((order, i) => (
               <div key={order.id} className="p-10 bg-white/5 rounded-none border-2 border-white/10 grid grid-cols-1 lg:grid-cols-4 gap-12 items-center group hover:bg-white/10 transition-all duration-700">
                 <div className="space-y-2">
                   <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.3em]">Reference ID</p>
@@ -412,11 +413,25 @@ export function SellerDashboard() {
   const { user } = useAuth();
   const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [newProduct, setNewProduct] = useState({ name: '', price: '', stock: '', category: 'Upcycled' });
+  const [products, setProducts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    const q = query(collection(db, 'products'), where('sellerId', '==', user.id));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      setIsLoading(false);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'products');
+    });
+    return () => unsubscribe();
+  }, [user]);
 
   if (!user) return null;
 
   const stats = [
-    { label: 'Active Inventory', value: '42 Units', icon: Package },
+    { label: 'Active Inventory', value: `${products.length} Units`, icon: Package },
     { label: 'Net Revenue', value: '$12,400', icon: TrendingUp },
     { label: 'Pending Orders', value: '08', icon: Calendar },
     { label: 'Brand Impact', value: 'A+', icon: Zap },
@@ -468,8 +483,8 @@ export function SellerDashboard() {
                 whileTap={{ scale: 0.97 }}
                 onClick={() => setIsAddingProduct(!isAddingProduct)}
                 className={cn(
-                  "p-4 border-2 transition-all",
-                  isAddingProduct ? "bg-white border-rose-500 text-rose-500" : "bg-primary-950 border-primary-950 text-white hover:bg-primary-500"
+                   "p-4 border-2 transition-all",
+                   isAddingProduct ? "bg-white border-rose-500 text-rose-500" : "bg-primary-950 border-primary-950 text-white hover:bg-primary-500"
                 )}
               >
                 {isAddingProduct ? <Trash2 size={20} /> : <Plus size={20} />}
@@ -535,33 +550,43 @@ export function SellerDashboard() {
                   key="list"
                   className="space-y-4"
                 >
-                  {MOCK_PRODUCTS.slice(0, 4).map(product => (
-                    <div key={product.id} className="p-4 md:p-6 modular-border bg-white flex flex-col sm:flex-row items-center justify-between gap-6 group hover:bg-black hover:text-white transition-all duration-500">
-                      <div className="flex items-center gap-4 md:gap-6 w-full sm:w-auto">
-                        <img src={product.images[0]} className="w-14 md:w-16 h-18 md:h-20 object-cover grayscale group-hover:grayscale-0 shrink-0" alt="" referrerPolicy="no-referrer" />
-                        <div>
-                          <p className="text-xs font-black uppercase tracking-tight">{product.name}</p>
-                          <p className="text-[10px] text-text-muted group-hover:text-white/40 uppercase font-black">{product.stock} in stock</p>
+                  {isLoading ? (
+                    <div className="flex justify-center p-8">
+                      <Loader2 size={24} className="animate-spin text-primary-950" />
+                    </div>
+                  ) : products.length === 0 ? (
+                    <div className="p-8 border-2 border-dashed border-primary-950/20 text-center uppercase">
+                       <p className="text-[10px] font-black text-primary-950/40">Belum ada inventaris</p>
+                    </div>
+                  ) : (
+                    products.slice(0, 4).map(product => (
+                      <div key={product.id} className="p-4 md:p-6 modular-border bg-white flex flex-col sm:flex-row items-center justify-between gap-6 group hover:bg-black hover:text-white transition-all duration-500">
+                        <div className="flex items-center gap-4 md:gap-6 w-full sm:w-auto">
+                          <img src={product.images[0]} className="w-14 md:w-16 h-18 md:h-20 object-cover grayscale group-hover:grayscale-0 shrink-0" alt="" referrerPolicy="no-referrer" />
+                          <div>
+                            <p className="text-xs font-black uppercase tracking-tight">{product.name}</p>
+                            <p className="text-[10px] text-text-muted group-hover:text-white/40 uppercase font-black">{product.stock} in stock</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 w-full sm:w-auto justify-end">
+                          <motion.button 
+                            whileTap={{ scale: 0.94 }}
+                            onClick={() => (window as any).addNotification(`Editing protocol for ${product.name} initialized.`, 'info')}
+                            className="p-2 md:p-3 text-text-muted group-hover:text-white hover:bg-white/10"
+                          >
+                            <Edit size={16} />
+                          </motion.button>
+                          <motion.button 
+                            whileTap={{ scale: 0.94 }}
+                            onClick={() => (window as any).addNotification(`Deletion request for ${product.name} queued. Waiting for admin approval.`, 'error')}
+                            className="p-2 md:p-3 text-rose-500 hover:bg-rose-500/10"
+                          >
+                            <Trash2 size={16} />
+                          </motion.button>
                         </div>
                       </div>
-                      <div className="flex gap-2 w-full sm:w-auto justify-end">
-                        <motion.button 
-                          whileTap={{ scale: 0.94 }}
-                          onClick={() => (window as any).addNotification(`Editing protocol for ${product.name} initialized.`, 'info')}
-                          className="p-2 md:p-3 text-text-muted group-hover:text-white hover:bg-white/10"
-                        >
-                          <Edit size={16} />
-                        </motion.button>
-                        <motion.button 
-                          whileTap={{ scale: 0.94 }}
-                          onClick={() => (window as any).addNotification(`Deletion request for ${product.name} queued. Waiting for admin approval.`, 'error')}
-                          className="p-2 md:p-3 text-rose-500 hover:bg-rose-500/10"
-                        >
-                          <Trash2 size={16} />
-                        </motion.button>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
