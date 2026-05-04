@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, Type } from '@google/genai';
 import { Upload, Camera, Sparkles, CheckCircle2, ArrowRight, RefreshCcw, Scissors, ShoppingCart } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AnalysisResult, Product } from '../types';
@@ -103,7 +103,7 @@ export function AIAnalysis() {
     };
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
       
       const imageParts = selectedImages.map((img) => ({
         inlineData: { 
@@ -112,22 +112,53 @@ export function AIAnalysis() {
         }
       }));
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: [
-          {
-            parts: [
-              { text: "Anda adalah pakar kurator tekstil tradisional Indonesia. Analisis 2 foto pakaian adat ini (tampak depan dan belakang) dengan ketelitian sangat tinggi. GUNAKAN BAHASA INDONESIA UNTUK SEMUA FIELD TEKS. Identifikasi jenis kain (Batik, Tenun, Songket, dll.), motif spesifik, dan teknik pembuatannya. Periksa tanda-tanda kerusakan mikroskopis seperti serat yang putus, kelunturan warna, noda teknis, atau robekan pada jahitan tradisional. Klasifikasikan ke dalam jalur sirkular: 'RESELL' (kondisi prima, nilai budaya tinggi), 'REPAIR' (memerlukan perbaikan ahli), atau 'UPCYCLE' (kerusakan struktural parah, material harus diolah kembali menjadi produk baru). Kembalikan objek JSON dengan format: { 'recommendation': 'RESELL'|'REPAIR'|'UPCYCLE', 'confidence': number (0-1), 'condition': { 'fabric': string, 'stain': string, 'damage': string, 'fading': string }, 'reasoning': string (detail teknis dalam Bahasa Indonesia), 'suggestedAction': string (dalam Bahasa Indonesia), 'environmentalImpact': { 'wasteReducedKg': number, 'co2SavedKg': number }, 'valuePotential': 'Low'|'Medium'|'High', 'recommendedPrice': string (format Rupiah, e.g., 'Rp 500.000 - Rp 750.000'), 'detectedFeatures': string[] (minimal 5 fitur unik dalam Bahasa Indonesia) }. Berikan estimasi harga yang realistis berdasarkan kelangkaan motif dan kondisi fisik kain." },
-              ...imageParts
-            ]
-          }
-        ],
-        config: { responseMimeType: "application/json" }
-      });
+      const prompt = "Anda adalah pakar kurator tekstil tradisional Indonesia. Analisis 2 foto pakaian adat ini (tampak depan dan belakang) dengan ketelitian sangat tinggi. GUNAKAN BAHASA INDONESIA UNTUK SEMUA FIELD TEKS. Identifikasi jenis kain (Batik, Tenun, Songket, dll.), motif spesifik, dan teknik pembuatannya. Periksa tanda-tanda kerusakan mikroskopis seperti serat yang putus, kelunturan warna, noda teknis, atau robekan pada jahitan tradisional. Klasifikasikan ke dalam jalur sirkular: 'RESELL', 'REPAIR', atau 'UPCYCLE'. Berikan estimasi harga yang realistis berdasarkan kelangkaan motif dan kondisi fisik kain.";
 
-      const responseText = response.text;
-      if (responseText) {
-        const data = JSON.parse(responseText);
+      const response = await ai.models.generateContent({
+        model: 'gemini-flash-latest',
+        contents: [{
+          parts: [{ text: prompt }, ...imageParts]
+        }],
+        config: { 
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              recommendation: { type: Type.STRING, enum: ["RESELL", "REPAIR", "UPCYCLE"] },
+              confidence: { type: Type.NUMBER, description: "0-100" },
+              condition: {
+                type: Type.OBJECT,
+                properties: {
+                  fabric: { type: Type.STRING },
+                  stain: { type: Type.STRING },
+                  damage: { type: Type.STRING },
+                  fading: { type: Type.STRING }
+                },
+                required: ["fabric", "stain", "damage", "fading"]
+              },
+              reasoning: { type: Type.STRING },
+              suggestedAction: { type: Type.STRING },
+              environmentalImpact: {
+                type: Type.OBJECT,
+                properties: {
+                  wasteReducedKg: { type: Type.NUMBER },
+                  co2SavedKg: { type: Type.NUMBER }
+                },
+                required: ["wasteReducedKg", "co2SavedKg"]
+              },
+              valuePotential: { type: Type.STRING, enum: ["Low", "Medium", "High"] },
+              recommendedPrice: { type: Type.STRING },
+              detectedFeatures: { type: Type.ARRAY, items: { type: Type.STRING } }
+            },
+            required: ["recommendation", "confidence", "condition", "reasoning", "suggestedAction", "environmentalImpact", "valuePotential", "recommendedPrice", "detectedFeatures"]
+          }
+        }
+      });
+      
+      const text = response.text;
+      
+      if (text) {
+        const data = JSON.parse(text);
         setResult(data);
         setEditDetails({
           name: `Lungsurin ${data.recommendation === 'UPCYCLE' ? 'Upcycled ' : ''}Garment`,
@@ -521,7 +552,7 @@ export function AIAnalysis() {
                     onClick={handleSellOnMarketplace}
                     className="w-full py-6 bg-primary-900 text-white font-display text-xl font-black uppercase tracking-[0.2em] hover:bg-black transition-all group relative overflow-hidden modular-border disabled:opacity-50"
                   >
-                    <span className="relative z-10 transition-colors duration-500 group-hover:text-white flex items-center justify-center gap-3">
+                    <span className="relative z-10 transition-colors duration-500 group-hover:text-primary-950 flex items-center justify-center gap-3">
                       {isSaving ? (
                         <>
                           <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

@@ -72,14 +72,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error: any) {
       console.error("Google login error", error);
       let errorMessage = "Terjadi kesalahan saat masuk dengan Google.";
-      if (error.code === 'auth/network-request-failed' || error.message?.includes('network error')) {
+      
+      const errorCode = error.code || error.message;
+      
+      if (errorCode?.includes('auth/network-request-failed') || errorCode?.includes('network error')) {
         errorMessage = "Koneksi jaringan gagal. Jika Anda menggunakan mode Incognito atau browser memblokir cookie pihak ketiga di dalam iFrame, silakan buka aplikasi ini di tab baru (Open in New Tab) atau izinkan cookie.";
-      } else if (error.code === 'auth/popup-closed-by-user') {
-        errorMessage = "Jendela login ditutup sebelum selesai.";
-      } else if (error.code === 'auth/popup-blocked') {
+      } else if (errorCode?.includes('auth/popup-closed-by-user')) {
+        errorMessage = "Jendela login ditutup sebelum selesai. Harap selesaikan proses login di jendela yang muncul.";
+      } else if (errorCode?.includes('auth/popup-blocked')) {
         errorMessage = "Jendela popup diblokir oleh browser. Harap izinkan popup untuk situs ini.";
-      } else if (error.code === 'auth/unauthorized-domain') {
+      } else if (errorCode?.includes('auth/unauthorized-domain')) {
         errorMessage = "Domain ini tidak diizinkan untuk masuk dengan Google. Silakan tambahkan domain Anda ke 'Authorized Domains' di Firebase Console.";
+      } else if (error.message) {
+        errorMessage = error.message;
       }
       throw new Error(errorMessage);
     } finally {
