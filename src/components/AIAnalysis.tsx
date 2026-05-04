@@ -517,7 +517,7 @@ export function AIAnalysis() {
                     onClick={handleSellOnMarketplace}
                     className="w-full py-6 bg-primary-900 text-white font-display text-xl font-black uppercase tracking-[0.2em] hover:bg-black transition-all group relative overflow-hidden modular-border disabled:opacity-50"
                   >
-                    <span className="relative z-10 transition-colors duration-500 group-hover:text-white flex items-center justify-center gap-3">
+                    <span className="relative z-10 transition-colors duration-500 group-hover:text-primary-900 flex items-center justify-center gap-3">
                       {isSaving ? (
                         <>
                           <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
