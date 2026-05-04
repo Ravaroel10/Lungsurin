@@ -50,7 +50,7 @@ export function Navbar() {
   const navItems = [
     { label: 'Beranda', path: '/' },
     { label: 'Pesanan', path: '/orders' },
-    { label: 'Scan Baju', path: '/analyze' },
+    { label: 'Scan Busana', path: '/analyze' },
     { label: 'Marketplace', path: '/marketplace' },
   ];
 

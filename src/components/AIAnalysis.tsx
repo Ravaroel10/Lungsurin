@@ -12,10 +12,10 @@ import { useAuth } from '../contexts/AuthContext';
 export function AIAnalysis() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [selectedImages, setSelectedImages] = useState<(string | null)[]>([null, null, null, null]);
+  const [selectedImages, setSelectedImages] = useState<(string | null)[]>([null, null]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const VIEW_LABELS = ['Depan', 'Belakang', 'Kiri', 'Kanan'];
+  const VIEW_LABELS = ['Depan', 'Belakang'];
   const [editDetails, setEditDetails] = useState({
     name: '',
     price: '',
@@ -84,7 +84,7 @@ export function AIAnalysis() {
 
   const runAnalysis = async () => {
     if (selectedImages.some(img => img === null)) {
-      (window as any).addNotification('Harap unggah keempat sudut foto untuk akurasi maksimal.', 'error');
+      (window as any).addNotification('Harap unggah foto tampak depan dan belakang untuk akurasi maksimal.', 'error');
       return;
     }
     setIsAnalyzing(true);
@@ -106,7 +106,7 @@ export function AIAnalysis() {
         contents: [
           {
             parts: [
-              { text: "Analisis 4 foto pakaian adat Indonesia ini (tampak depan, belakang, kiri, dan kanan) untuk akurasi maksimal. Berdasarkan semua sudut pandang ini, klasifikasikan ke dalam jalur sirkular: 'RESELL' (layak dipakai dan dijual kembali), 'REPAIR' (sedikit rusak), atau 'UPCYCLE' (sudah parah, perlu modifikasi kreatif oleh pengrajin). Kembalikan objek JSON dengan: 'recommendation' (RESELL/REPAIR/UPCYCLE), 'confidence' (number), 'condition' (object dengan fabric, stain, damage, fading), 'reasoning' (string), 'suggestedAction' (string), 'environmentalImpact' (object dengan wasteReducedKg and co2SavedKg numbers), 'valuePotential' (Low/Medium/High), 'recommendedPrice' (string), and 'detectedFeatures' (array strings, misal: 'Batik Solo', 'Tenun Ikat', 'Kebaya')." },
+              { text: "Analisis 2 foto pakaian adat Indonesia ini (tampak depan dan belakang) untuk akurasi maksimal. Berdasarkan kedua sudut pandang ini, klasifikasikan ke dalam jalur sirkular: 'RESELL' (layak dipakai dan dijual kembali), 'REPAIR' (sedikit rusak), atau 'UPCYCLE' (sudah parah, perlu modifikasi kreatif oleh pengrajin). Kembalikan objek JSON dengan: 'recommendation' (RESELL/REPAIR/UPCYCLE), 'confidence' (number), 'condition' (object dengan fabric, stain, damage, fading), 'reasoning' (string), 'suggestedAction' (string), 'environmentalImpact' (object dengan wasteReducedKg and co2SavedKg numbers), 'valuePotential' (Low/Medium/High), 'recommendedPrice' (string), and 'detectedFeatures' (array strings, misal: 'Batik Solo', 'Tenun Ikat', 'Kebaya')." },
               ...imageParts
             ]
           }
@@ -220,7 +220,7 @@ export function AIAnalysis() {
         <div className="p-6 sm:p-12 md:p-16 lg:p-24 modular-border border-y-0 border-l-0 space-y-8 bg-white/50">
           <div className="space-y-2">
             <p className="text-[10px] font-black uppercase tracking-[0.4em] text-text-muted">Brankas Digital</p>
-            <h2 className="text-3xl lg:text-5xl leading-none font-display font-black uppercase tracking-tighter text-center lg:text-left">Mulai Pemindaian</h2>
+            <h2 className="text-3xl lg:text-5xl leading-none font-display font-black uppercase tracking-tighter text-center lg:text-left">Scan Busana</h2>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pb-4">
@@ -282,7 +282,7 @@ export function AIAnalysis() {
                 Menganalisis Detail...
               </>
             ) : (
-              selectedImages.some(img => img === null) ? 'Lengkapi 4 Foto' : 'Analisis Serat & Kondisi'
+              selectedImages.some(img => img === null) ? 'Lengkapi Foto' : 'Analisis Serat & Kondisi'
             )}
           </motion.button>
         </div>

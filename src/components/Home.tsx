@@ -212,7 +212,7 @@ export function Home() {
         {/* Quick Menu Icons (Shopee influence) */}
         <div className="bg-white border-2 border-primary-950 p-4 sm:p-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 sm:gap-8 shadow-sm bg-batik">
           {[
-            { icon: Sparkles, label: 'Scan Baju', path: '/analyze', color: 'bg-primary-950 text-white' },
+            { icon: Sparkles, label: 'Scan Busana', path: '/analyze', color: 'bg-primary-950 text-white' },
             { icon: BookOpen, label: 'Edukasi', path: '/education', color: 'bg-primary-500 text-white' },
             { icon: Leaf, label: 'Dampak', path: '/dashboard', color: 'bg-primary-500 text-white' },
             { icon: ShoppingBag, label: 'Keranjang', path: '/cart', color: 'bg-primary-950 text-white' },
