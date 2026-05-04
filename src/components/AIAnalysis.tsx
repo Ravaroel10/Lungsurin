@@ -90,6 +90,17 @@ export function AIAnalysis() {
     setIsAnalyzing(true);
     setResult(null);
 
+    const getMedianPrice = (priceStr: string): string => {
+      const cleanStr = priceStr.replace(/\./g, '');
+      const matches = cleanStr.match(/\d+/g);
+      if (!matches || matches.length === 0) return '50';
+      const prices = matches.map(m => parseInt(m, 10));
+      if (prices.length >= 2) {
+        return Math.floor((prices[0] + prices[1]) / 2).toString();
+      }
+      return prices[0].toString();
+    };
+
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
       const model = 'gemini-1.5-flash';
@@ -118,7 +129,7 @@ export function AIAnalysis() {
       setResult(data);
       setEditDetails({
         name: `Lungsurin ${data.recommendation === 'UPCYCLE' ? 'Upcycled ' : ''}Garment`,
-        price: data.recommendedPrice.replace(/[^0-9.]/g, '') || '50',
+        price: getMedianPrice(data.recommendedPrice),
         description: data.reasoning,
         stock: '1'
       });
@@ -147,7 +158,7 @@ export function AIAnalysis() {
       setResult(fallback);
       setEditDetails({
         name: `Lungsurin ${fallback.recommendation === 'UPCYCLE' ? 'Upcycled ' : ''}Garment`,
-        price: fallback.recommendedPrice.replace(/[^0-9]/g, '') || '150000',
+        price: getMedianPrice(fallback.recommendedPrice),
         description: fallback.reasoning,
         stock: '1'
       });
