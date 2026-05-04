@@ -1,0 +1,80 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Stores user profile data, including curation list and activity metrics.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "fullName": { "type": "string" },
+        "username": { "type": "string" },
+        "role": { "type": "string", "enum": ["USER", "ADMIN", "SELLER"] },
+        "favorites": { "type": "array", "items": { "type": "string" } },
+        "points": { "type": "number" },
+        "streak": { "type": "number" },
+        "lastActionDate": { "type": "string" },
+        "address": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "isPremium": { "type": "boolean" },
+        "premiumStatus": { "type": "string", "enum": ["none", "pending", "active"] },
+        "premiumProofURL": { "type": "string" },
+        "vouchers": { "type": "array", "items": { "type": "object" } },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "fullName", "role"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Stores product data listed in the marketplace.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "sellerId": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "originalPrice": { "type": "number" },
+        "category": { "type": "string" },
+        "condition": { "type": "string" },
+        "images": { "type": "array", "items": { "type": "string" } },
+        "type": { "type": "string", "enum": ["CURATED", "UPCYCLED"] },
+        "analysisType": { "type": "string", "enum": ["RESALE", "REPAIR", "UPCYCLE"] },
+        "impact": {
+          "type": "object",
+          "properties": {
+            "wasteReducedKg": { "type": "number" },
+            "co2SavedKg": { "type": "number" }
+          }
+        },
+        "aiCondition": {
+          "type": "object",
+          "properties": {
+            "fabric": { "type": "string" },
+            "stain": { "type": "string" },
+            "damage": { "type": "string" },
+            "fading": { "type": "string" }
+          }
+        },
+        "aiReasoning": { "type": "string" },
+        "aiConfidence": { "type": "number" },
+        "rating": { "type": "number" },
+        "stock": { "type": "number" },
+        "isModerated": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "price", "category", "sellerId"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "User profile documents."
+    },
+    "products/{productId}": {
+      "schema": "Product",
+      "description": "Product documents accessible in the marketplace."
+    }
+  }
+}

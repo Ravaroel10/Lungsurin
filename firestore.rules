@@ -1,0 +1,97 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helper Primitives ---
+    function isSignedIn() { return request.auth != null; }
+    function isVerified() { return isSignedIn(); } // Relaxed for dev testing
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    // --- Entity Validations ---
+    function isValidUser(data) {
+      return data.email is string && data.email.size() <= 200 &&
+             data.fullName is string && data.fullName.size() <= 200 &&
+             data.username is string && data.username.size() <= 100 &&
+             data.role in ['USER', 'ADMIN', 'SELLER'] &&
+             data.favorites is list && data.favorites.size() <= 1000 &&
+             data.points is number &&
+             data.streak is number &&
+             data.lastActionDate is string &&
+             (!('isPremium' in data) || data.isPremium is bool) &&
+             (!('premiumStatus' in data) || data.premiumStatus in ['none', 'pending', 'active']) &&
+             (!('premiumProofURL' in data) || (data.premiumProofURL is string && data.premiumProofURL.size() <= 2000000)) &&
+             (!('vouchers' in data) || (data.vouchers is list && data.vouchers.size() <= 50)) &&
+             (!('purchasedCount' in data) || data.purchasedCount is number) &&
+             (!('avatar' in data) || (data.avatar is string && data.avatar.size() <= 900000)) &&
+             (!('address' in data) || data.address is string) &&
+             (!('phoneNumber' in data) || data.phoneNumber is string);
+    }
+
+    function isValidProduct(data) {
+      return data.name is string && data.name.size() <= 200 &&
+             data.price is number && data.price >= 0 &&
+             data.category is string &&
+             data.sellerId is string &&
+             data.images is list && data.images.size() <= 10 &&
+             data.stock is number && data.stock >= 0;
+    }
+
+    // --- Collection Rules ---
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && 
+                      isValidUser(incoming()) && 
+                      incoming().email == request.auth.token.email &&
+                      incoming().createdAt == request.time;
+      allow update: if isOwner(userId) && 
+                      isValidUser(incoming()) &&
+                      incoming().email == existing().email &&
+                      incoming().role == existing().role && // Prevent role changing
+                      incoming().updatedAt == request.time &&
+                      (
+                        // Action: Update Profile & Metadata
+                        incoming().diff(existing()).affectedKeys().hasOnly(['fullName', 'username', 'address', 'phoneNumber', 'avatar', 'isPremium', 'premiumStatus', 'premiumProofURL', 'vouchers', 'updatedAt']) ||
+                        // Action: Update Activity / Favorites
+                        incoming().diff(existing()).affectedKeys().hasOnly(['favorites', 'points', 'streak', 'lastActionDate', 'purchasedCount', 'updatedAt'])
+                      );
+    }
+
+    match /products/{productId} {
+      allow read: if true;
+      allow create: if isVerified() && 
+                      isValidProduct(incoming()) && 
+                      incoming().sellerId == request.auth.uid &&
+                      incoming().createdAt == request.time;
+      allow update: if isVerified() && (
+                      // Action: Seller Update
+                      (existing().sellerId == request.auth.uid &&
+                       isValidProduct(incoming()) &&
+                       incoming().sellerId == existing().sellerId &&
+                       incoming().createdAt == existing().createdAt) ||
+                      // Action: Buyer Purchase (Stock update)
+                      (incoming().diff(existing()).affectedKeys().hasOnly(['stock']) &&
+                       incoming().stock is number &&
+                       incoming().stock >= 0 &&
+                       incoming().stock < existing().stock)
+                    );
+      allow delete: if isSignedIn() && existing().sellerId == request.auth.uid;
+    }
+
+    match /orders/{orderId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && 
+                      incoming().userId == request.auth.uid &&
+                      incoming().status == 'PROSES' &&
+                      incoming().createdAt == request.time;
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid &&
+                      incoming().diff(existing()).affectedKeys().hasOnly(['status']);
+    }
+  }
+}

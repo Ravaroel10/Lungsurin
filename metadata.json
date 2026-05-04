@@ -1,0 +1,13 @@
+{
+  "name": "Lungsurin",
+  "description": "A circular fashion ecosystem for upcycling, resale, and repair with AI analysis.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "AI-powered clothing analysis",
+    "Sustainable marketplace",
+    "Environmental impact tracking",
+    "Circular economy ecosystem"
+  ]
+}
