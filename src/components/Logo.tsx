@@ -25,8 +25,8 @@ export const Logo: React.FC<LogoProps> = ({ className, size = 32, variant = 'ful
       {(variant === 'full' || variant === 'large') && (
         <span className={`font-serif font-black text-[#8B1A1A] leading-none whitespace-nowrap ${
           isLarge 
-            ? "block text-[2.5em] sm:text-[3.2em] lg:text-[4.2em] -mt-4" 
-            : "hidden sm:block text-[1.6em] lg:text-[2.2em] -mt-1"
+            ? "block text-[2em] sm:text-[2.6em] lg:text-[3.2em] -mt-2" 
+            : "hidden sm:block text-[1.4em] lg:text-[2em] -mt-1"
         }`}>
           Lungsur<span className="relative inline-flex items-center leading-none">
             <span className={`absolute left-1/2 -translate-x-1/2 bg-[#D4AF37] rotate-45 shadow-[1px_1px_2px_rgba(0,0,0,0.1)] ${

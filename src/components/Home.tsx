@@ -88,7 +88,7 @@ export function Home() {
           >
             <div className="space-y-8">
               <div className="mx-auto flex justify-center py-6 sm:py-8">
-                <Logo size={120} />
+                <Logo size={100} />
               </div>
               <div className="space-y-6 sm:space-y-8">
                 <h2 className="text-5xl sm:text-6xl md:text-8xl font-serif font-bold tracking-tight leading-[0.85] text-primary-950">

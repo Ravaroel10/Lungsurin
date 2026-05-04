@@ -34,8 +34,8 @@ export function LoginPage() {
         className="w-full max-w-md bg-white rounded-[2.5rem] p-10 card-shadow border border-primary-100"
       >
         <div className="text-center mb-10">
-          <div className="flex justify-center mb-10 scale-110">
-            <Logo size={180} variant="large" />
+          <div className="flex justify-center mb-10 scale-100">
+            <Logo size={140} variant="large" />
           </div>
           <h2 className="text-3xl font-display font-bold text-primary-900 tracking-tighter uppercase">Selamat Datang Kembali</h2>
           <p className="text-primary-900/40 mt-2">Masuk untuk melanjutkan perjalanan keberlanjutan Anda.</p>
@@ -165,8 +165,8 @@ export function SignupPage() {
         className="w-full max-w-2xl bg-white rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-12 card-shadow border border-primary-100"
       >
         <div className="text-center mb-12">
-          <div className="flex justify-center mb-12 scale-110">
-            <Logo size={160} variant="large" />
+          <div className="flex justify-center mb-12 scale-100">
+            <Logo size={130} variant="large" />
           </div>
           <h2 className="text-3xl sm:text-4xl font-display font-bold text-primary-900 mb-3 tracking-tighter uppercase">Gabung dalam Gerakan</h2>
           <p className="text-primary-900/40 text-sm sm:text-base px-4">Langkahlah ke masa depan fashion berkelanjutan.</p>
