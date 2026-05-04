@@ -78,6 +78,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         errorMessage = "Jendela login ditutup sebelum selesai.";
       } else if (error.code === 'auth/popup-blocked') {
         errorMessage = "Jendela popup diblokir oleh browser. Harap izinkan popup untuk situs ini.";
+      } else if (error.code === 'auth/unauthorized-domain') {
+        errorMessage = "Domain ini tidak diizinkan untuk masuk dengan Google. Silakan tambahkan domain Anda ke 'Authorized Domains' di Firebase Console.";
       }
       throw new Error(errorMessage);
     } finally {
