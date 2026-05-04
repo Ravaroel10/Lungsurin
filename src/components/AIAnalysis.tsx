@@ -103,9 +103,9 @@ export function AIAnalysis() {
 
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      const model = 'gemini-1.5-flash';
+      const model = 'gemini-1.5-pro';
       
-      const imageParts = selectedImages.map((img, idx) => ({
+      const imageParts = selectedImages.map((img) => ({
         inlineData: { 
           mimeType: "image/jpeg", 
           data: img!.split(',')[1] 
@@ -117,7 +117,7 @@ export function AIAnalysis() {
         contents: [
           {
             parts: [
-              { text: "Analisis 2 foto pakaian adat Indonesia ini (tampak depan dan belakang) untuk akurasi maksimal. Berdasarkan kedua sudut pandang ini, klasifikasikan ke dalam jalur sirkular: 'RESELL' (layak dipakai dan dijual kembali), 'REPAIR' (sedikit rusak), atau 'UPCYCLE' (sudah parah, perlu modifikasi kreatif oleh pengrajin). Kembalikan objek JSON dengan: 'recommendation' (RESELL/REPAIR/UPCYCLE), 'confidence' (number), 'condition' (object dengan fabric, stain, damage, fading), 'reasoning' (string), 'suggestedAction' (string), 'environmentalImpact' (object dengan wasteReducedKg and co2SavedKg numbers), 'valuePotential' (Low/Medium/High), 'recommendedPrice' (string), and 'detectedFeatures' (array strings, misal: 'Batik Solo', 'Tenun Ikat', 'Kebaya')." },
+              { text: "Anda adalah pakar kurator tekstil tradisional Indonesia. Analisis 2 foto pakaian adat ini (tampak depan dan belakang) dengan ketelitian sangat tinggi. Identifikasi jenis kain (Batik, Tenun, Songket, dll.), motif spesifik, dan teknik pembuatannya. Periksa tanda-tanda kerusakan mikroskopis seperti serat yang putus, kelunturan warna, noda teknis, atau robekan pada jahitan tradisional. Klasifikasikan ke dalam jalur sirkular: 'RESELL' (kondisi prima, nilai budaya tinggi), 'REPAIR' (memerlukan perbaikan ahli), atau 'UPCYCLE' (kerusakan struktural parah, material harus diolah kembali menjadi produk baru). Kembalikan objek JSON dengan format: { 'recommendation': 'RESELL'|'REPAIR'|'UPCYCLE', 'confidence': number (0-1), 'condition': { 'fabric': string, 'stain': string, 'damage': string, 'fading': string }, 'reasoning': string (detail teknis), 'suggestedAction': string, 'environmentalImpact': { 'wasteReducedKg': number, 'co2SavedKg': number }, 'valuePotential': 'Low'|'Medium'|'High', 'recommendedPrice': string (format Rupiah, e.g., 'Rp 500.000 - Rp 750.000'), 'detectedFeatures': string[] (minimal 5 fitur unik) }. Berikan estimasi harga yang realistis berdasarkan kelangkaan motif dan kondisi fisik kain." },
               ...imageParts
             ]
           }
