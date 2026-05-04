@@ -9,6 +9,7 @@ import { Product } from '../types';
 import { cn } from '../lib/utils';
 import { useCart } from '../contexts/CartContext';
 import { Logo } from './Logo';
+import { USD_TO_IDR } from '../constants';
 
 const CATEGORIES = ['Semua', 'Daur Ulang', 'Jual Lagi', 'Perbaikan', 'Vintage'];
 
@@ -313,9 +314,9 @@ export function Home() {
                     <div className="flex flex-wrap items-end justify-between gap-2 pt-4 border-t border-primary-950/20 mt-auto">
                       <div className="flex flex-col min-w-0">
                         {product.originalPrice && (
-                          <span className="text-[10px] text-primary-900/60 line-through font-bold truncate">Rp{(product.originalPrice * 1000).toLocaleString('id-ID')}</span>
+                          <span className="text-[10px] text-primary-900/60 line-through font-bold truncate">Rp{(product.originalPrice * USD_TO_IDR).toLocaleString('id-ID')}</span>
                         )}
-                        <span className="text-lg sm:text-xl font-black text-primary-500 truncate">Rp{(product.price * 1000).toLocaleString('id-ID')}</span>
+                        <span className="text-lg sm:text-xl font-black text-primary-500 truncate">Rp{(product.price * USD_TO_IDR).toLocaleString('id-ID')}</span>
                       </div>
                       <div className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-white bg-primary-950 px-2.5 py-1 shrink-0">
                         {product.stock} Unit

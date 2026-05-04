@@ -432,7 +432,7 @@ export function SellerDashboard() {
 
   const stats = [
     { label: 'Active Inventory', value: `${products.length} Units`, icon: Package },
-    { label: 'Net Revenue', value: '$12,400', icon: TrendingUp },
+    { label: 'Net Revenue', value: 'Rp 12.400.000', icon: TrendingUp },
     { label: 'Pending Orders', value: '08', icon: Calendar },
     { label: 'Brand Impact', value: 'A+', icon: Zap },
   ];

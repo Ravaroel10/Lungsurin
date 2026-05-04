@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { db } from '../lib/firebase';
 import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
 import { formatRp, cn } from '../lib/utils';
+import { USD_TO_IDR } from '../constants';
 import { Package, Truck, CheckCircle, Clock, ChevronRight, Search, MapPin, CreditCard, ShieldCheck, X, Copy, Info, Box } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -176,11 +177,11 @@ export function Orders() {
                         <div className="flex-1 min-w-0">
                           <h4 className="font-black uppercase tracking-tight text-sm truncate">{item.name}</h4>
                           <p className="text-xs font-bold text-primary-500 uppercase tracking-widest mt-1">
-                            {item.quantity} x {formatRp(item.price * 15000)}
+                            {item.quantity} x {formatRp(item.price * USD_TO_IDR)}
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="font-black text-primary-950">{formatRp(item.price * 15000 * item.quantity)}</p>
+                          <p className="font-black text-primary-950">{formatRp(item.price * USD_TO_IDR * item.quantity)}</p>
                         </div>
                       </div>
                     ))}
@@ -340,9 +341,9 @@ export function Orders() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-black uppercase truncate">{item.name}</p>
-                          <p className="text-[10px] font-bold text-primary-500 uppercase">{item.quantity} x {formatRp(item.price * 15000)}</p>
+                          <p className="text-[10px] font-bold text-primary-500 uppercase">{item.quantity} x {formatRp(item.price * USD_TO_IDR)}</p>
                         </div>
-                        <p className="text-sm font-black">{formatRp(item.price * 15000 * item.quantity)}</p>
+                        <p className="text-sm font-black">{formatRp(item.price * USD_TO_IDR * item.quantity)}</p>
                       </div>
                     ))}
                   </div>

@@ -5,6 +5,7 @@ import { Heart, ArrowRight, ShoppingBag, Trash2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { cn, formatRp } from '../lib/utils';
+import { USD_TO_IDR } from '../constants';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Product } from '../types';
@@ -125,7 +126,7 @@ export function Favorites() {
                     
                     <div className="flex items-center justify-between">
                       <span className="text-lg font-display font-black text-primary-950">
-                        {formatRp(product.price * 15000)}
+                        {formatRp(product.price * USD_TO_IDR)}
                       </span>
                       <button 
                         onClick={() => handleAddToCart(product)}

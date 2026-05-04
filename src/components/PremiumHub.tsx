@@ -22,6 +22,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { cn } from '../lib/utils';
 import { Link } from 'react-router-dom';
 import { GoogleGenAI } from "@google/genai";
+import { PREMIUM_PRICE, PREMIUM_PRICE_FORMATTED } from '../constants';
 
 interface StylingResult {
   outfitCombination: string;
@@ -35,7 +36,7 @@ const PREMIUM_PLANS = [
   {
     id: 'gold',
     name: 'Lungsurin Gold Member',
-    price: 'Rp 50.000',
+    price: PREMIUM_PRICE_FORMATTED,
     duration: 'Per Bulan',
     features: [
       'Full AI Styling Suite Unlimited',
@@ -426,7 +427,7 @@ export function PremiumHub() {
                         
                         <div className="space-y-2">
                           <p className="text-[10px] font-bold text-primary-900/60 leading-relaxed italic">
-                            * Silakan transfer sebesar <span className="text-primary-950 font-black">Rp 50.000</span> ke rekening di atas. 
+                            * Silakan transfer sebesar <span className="text-primary-950 font-black">{PREMIUM_PRICE_FORMATTED}</span> ke rekening di atas. 
                             Pastikan nominal sesuai agar sistem dapat memverifikasi secara otomatis.
                           </p>
                         </div>
@@ -438,7 +439,7 @@ export function PremiumHub() {
                         onClick={() => selectedPlan && handleUpgrade(selectedPlan.id)}
                         className="w-full py-5 bg-primary-950 text-white font-display font-black uppercase tracking-widest hover:bg-primary-500 transition-all cursor-pointer relative z-[110] shadow-[8px_8px_0px_rgba(0,0,0,0.1)] active:shadow-none active:translate-x-1 active:translate-y-1"
                       >
-                        {isProcessingPayment ? <Loader2 className="animate-spin mx-auto" size={24} /> : "Saya Sudah Transfer Rp 50.000"}
+                        {isProcessingPayment ? <Loader2 className="animate-spin mx-auto" size={24} /> : `Saya Sudah Transfer ${PREMIUM_PRICE_FORMATTED}`}
                       </motion.button>
                     </>
                   )}

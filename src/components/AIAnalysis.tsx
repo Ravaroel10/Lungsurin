@@ -8,6 +8,7 @@ import { cn } from '../lib/utils';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
+import { USD_TO_IDR } from '../constants';
 
 export function AIAnalysis() {
   const navigate = useNavigate();
@@ -91,15 +92,18 @@ export function AIAnalysis() {
     setResult(null);
 
     const getMedianPrice = (priceStr: string | undefined | null): string => {
-      if (!priceStr) return '150000';
+      if (!priceStr) return (150000 / USD_TO_IDR).toString();
       const cleanStr = priceStr.replace(/\./g, '');
       const matches = cleanStr.match(/\d+/g);
-      if (!matches || matches.length === 0) return '150000';
+      if (!matches || matches.length === 0) return (150000 / USD_TO_IDR).toString();
       const prices = matches.map(m => parseInt(m, 10));
+      let medianIDR = 150000;
       if (prices.length >= 2) {
-        return Math.floor((prices[0] + prices[1]) / 2).toString();
+        medianIDR = Math.floor((prices[0] + prices[1]) / 2);
+      } else {
+        medianIDR = prices[0];
       }
-      return prices[0].toString();
+      return (medianIDR / USD_TO_IDR).toString();
     };
 
     try {
@@ -479,7 +483,7 @@ export function AIAnalysis() {
                     </div>
                     
                     <div>
-                      <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-text-muted mb-1">Harga Jual (Angka)</label>
+                      <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-text-muted mb-1">Harga Jual (USD - Auto Convert to Rp)</label>
                       <input 
                         type="text" 
                         value={editDetails.price}
@@ -487,6 +491,7 @@ export function AIAnalysis() {
                         className="w-full bg-white border border-black/10 p-3 font-display text-lg font-black tracking-tight focus:border-primary-900 outline-none transition-colors"
                         placeholder="0.00"
                       />
+                      <p className="text-[10px] font-bold text-primary-500 mt-1 uppercase">Estimasi dalam Rupiah: Rp{(parseFloat(editDetails.price) * USD_TO_IDR || 0).toLocaleString('id-ID')}</p>
                     </div>
 
                     <div>

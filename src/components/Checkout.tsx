@@ -6,6 +6,7 @@ import { MapPin, Ticket, CreditCard, Box, ChevronRight, ShieldCheck, MailPlus } 
 import { db } from '../lib/firebase';
 import { doc, writeBatch, collection, serverTimestamp } from 'firebase/firestore';
 import { cn, formatRp } from '../lib/utils';
+import { USD_TO_IDR } from '../constants';
 
 export function Checkout() {
   const { user, updateUser } = useAuth();
@@ -24,7 +25,7 @@ export function Checkout() {
   }, [selectedItemIds, navigate]);
 
   const checkoutItems = cart.filter(item => selectedItemIds.includes(item.id));
-  const subtotal = checkoutItems.reduce((acc, item) => acc + (item.price * 15000 * item.quantity), 0);
+  const subtotal = checkoutItems.reduce((acc, item) => acc + (item.price * USD_TO_IDR * item.quantity), 0);
   const protectionFee = 5400; // Mock Rp5.400
   
   // Dynamic Shipping Calculation: Base 5000 + 2500 per item
@@ -170,13 +171,13 @@ export function Checkout() {
                   
                   <div className="flex items-center justify-between w-full md:w-auto md:gap-0 mt-4 md:mt-0 font-bold">
                     <div className="w-32 text-center text-primary-950 font-black text-sm">
-                      {formatRp(item.price * 15000)}
+                      {formatRp(item.price * USD_TO_IDR)}
                     </div>
                     <div className="w-24 text-center text-primary-950 font-black text-sm">
                       {item.quantity}
                     </div>
                     <div className="w-40 text-right font-black text-primary-950 text-sm">
-                      {formatRp(item.price * 15000 * item.quantity)}
+                      {formatRp(item.price * USD_TO_IDR * item.quantity)}
                     </div>
                   </div>
                 </div>

@@ -4,6 +4,7 @@ import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { cn, formatRp } from '../lib/utils';
+import { USD_TO_IDR } from '../constants';
 import { doc, writeBatch, increment } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
@@ -60,7 +61,7 @@ export function Cart() {
   const selectedCount = selectedItemIds.size;
   const selectedTotal = cart
     .filter(item => selectedItemIds.has(item.id))
-    .reduce((sum, item) => sum + (item.price * 15000 * item.quantity), 0);
+    .reduce((sum, item) => sum + (item.price * USD_TO_IDR * item.quantity), 0);
 
   const handleBuyNow = () => {
     if (selectedItemIds.size === 0) return;
@@ -136,7 +137,7 @@ export function Cart() {
               {/* Items */}
               {items.map(item => {
                 const isSelected = selectedItemIds.has(item.id);
-                const priceRp = item.price * 15000;
+                const priceRp = item.price * USD_TO_IDR;
 
                 return (
                   <div key={item.id} className="p-5 flex flex-col md:flex-row gap-4 border-b border-primary-100 last:border-0 relative group">

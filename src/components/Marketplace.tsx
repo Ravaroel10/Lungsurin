@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ShoppingCart, Heart, Search, Filter, Star, ShieldCheck, MessageCircle, Menu, X, Box, Tag, Zap, Info, BookOpen, Crown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
+import { USD_TO_IDR } from '../constants';
 import { formatRp, cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -241,9 +242,9 @@ export function Marketplace() {
                   </div>
                   <div className="text-right">
                     {product.originalPrice && (
-                      <p className="text-xs text-primary-300 line-through font-bold mb-0.5">{formatRp(product.originalPrice * 15000)}</p>
+                      <p className="text-xs text-primary-300 line-through font-bold mb-0.5">{formatRp(product.originalPrice * USD_TO_IDR)}</p>
                     )}
-                    <p className="font-display font-bold text-xl text-primary-500">{formatRp(product.price * 15000)}</p>
+                    <p className="font-display font-bold text-xl text-primary-500">{formatRp(product.price * USD_TO_IDR)}</p>
                     {product.stock !== undefined && (
                       <p className={cn(
                         "text-[9px] font-black uppercase tracking-widest mt-1",

@@ -11,6 +11,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Product } from '../types';
 import { useAuth } from '../contexts/AuthContext';
+import { USD_TO_IDR } from '../constants';
 import { SellerChat } from './SellerChat';
 
 export function ProductDetail() {
@@ -196,11 +197,19 @@ export function ProductDetail() {
                 <div className="absolute top-0 right-0 w-32 h-32 border-4 border-white rotate-45 translate-x-16 -translate-y-16" />
               </div>
               <div className="flex items-center gap-4">
-                <span className="text-white/20 line-through text-base md:text-lg font-display">Rp39.899.000</span>
-                <span className="bg-primary-500 text-white text-[10px] font-black px-2 py-1">SALE -12%</span>
+                {product.originalPrice && (
+                  <>
+                    <span className="text-white/20 line-through text-base md:text-lg font-display">
+                      {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(product.originalPrice * USD_TO_IDR)}
+                    </span>
+                    <span className="bg-primary-500 text-white text-[10px] font-black px-2 py-1">
+                      -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
+                    </span>
+                  </>
+                )}
               </div>
               <div className="text-primary-100 text-3xl md:text-5xl font-display font-black tracking-tight">
-                {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(product.price * 1000)}
+                {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(product.price * USD_TO_IDR)}
               </div>
             </div>
 
