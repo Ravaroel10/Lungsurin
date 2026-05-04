@@ -861,7 +861,7 @@ export function PremiumHub() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                   {[
                     { id: 'ea1', name: 'Kawung Silk Scarf', price: 'Rp 350.000', origin: 'Jogja Artisan', img: 'https://images.unsplash.com/photo-1590736704728-f4730bb3c3af?q=80&w=800&auto=format&fit=crop', stock: 3 },
-                    { id: 'ea2', name: 'Upcycled Denim Batik', price: 'Rp 650.000', origin: 'Lungsurin Lab', img: 'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?q=80&w=800&auto=format&fit=crop', stock: 1 },
+                    { id: 'ea2', name: 'Upcycled Denim Batik', price: 'Rp 480.000', origin: 'Lungsurin Lab', img: 'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?q=80&w=800&auto=format&fit=crop', stock: 1 },
                     { id: 'ea3', name: 'Tenun Bone Belt', price: 'Rp 120.000', origin: 'Bone, Sulsel', img: 'https://images.unsplash.com/photo-1614715838608-dd527c46231d?q=80&w=800&auto=format&fit=crop', stock: 10 },
                     { id: 'ea4', name: 'Kebaya Encim Modern', price: 'Rp 450.000', origin: 'Betawi Craft', img: 'https://images.unsplash.com/photo-1621330396173-e41b1cafd17f?q=80&w=800&auto=format&fit=crop', stock: 5 },
                   ].map((item) => (

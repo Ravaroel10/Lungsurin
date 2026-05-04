@@ -200,7 +200,7 @@ export function ProductDetail() {
                 {product.originalPrice && (
                   <>
                     <span className="text-white/20 line-through text-base md:text-lg font-display">
-                      {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(product.originalPrice * USD_TO_IDR)}
+                      {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(product.originalPrice)}
                     </span>
                     <span className="bg-primary-500 text-white text-[10px] font-black px-2 py-1">
                       -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
@@ -209,7 +209,7 @@ export function ProductDetail() {
                 )}
               </div>
               <div className="text-primary-100 text-3xl md:text-5xl font-display font-black tracking-tight">
-                {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(product.price * USD_TO_IDR)}
+                {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(product.price)}
               </div>
             </div>
 
