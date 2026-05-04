@@ -24,8 +24,12 @@ import {
   Search,
   Eye,
   Sparkles,
-  Loader2
+  Loader2,
+  UserCheck,
+  UserX
 } from 'lucide-react';
+import { collection, query, where, onSnapshot, doc, updateDoc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { MOCK_ORDERS, MOCK_PRODUCTS } from '../lib/mockData';
 import { formatCurrency, formatDate, cn } from '../lib/utils';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
@@ -571,6 +575,64 @@ export function SellerDashboard() {
 // --- ADMIN DASHBOARD ---
 export function AdminDashboard() {
   const { user } = useAuth();
+  const [pendingAdmins, setPendingAdmins] = useState<any[]>([]);
+  const [isProcessing, setIsProcessing] = useState<string | null>(null);
+
+  useEffect(() => {
+    const q = query(
+      collection(db, 'users'),
+      where('role', '==', 'ADMIN'),
+      where('status', '==', 'pending')
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setPendingAdmins(users);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const handleApprove = async (userId: string) => {
+    setIsProcessing(userId);
+    try {
+      await updateDoc(doc(db, 'users', userId), {
+        status: 'active'
+      });
+      (window as any).addNotification('Admin approved successfully.', 'success');
+    } catch (error) {
+      console.error(error);
+      const errInfo = {
+        error: error instanceof Error ? error.message : String(error),
+        authInfo: {
+          userId: user.id,
+          email: user.email,
+        },
+        operationType: 'update',
+        path: `users/${userId}`
+      };
+      console.error('Firestore Error:', JSON.stringify(errInfo));
+      (window as any).addNotification('Failed to approve admin.', 'error');
+    } finally {
+      setIsProcessing(null);
+    }
+  };
+
+  const handleReject = async (userId: string) => {
+    setIsProcessing(userId);
+    try {
+      await updateDoc(doc(db, 'users', userId), {
+        role: 'USER',
+        status: 'active'
+      });
+      (window as any).addNotification('Admin request rejected. User demoted to Eco-User.', 'info');
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsProcessing(null);
+    }
+  };
+
   if (!user) return null;
 
   const stats = [
@@ -598,32 +660,46 @@ export function AdminDashboard() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 modular-border border-t-0 border-x-0">
           <div className="p-12 lg:p-20 bg-white modular-border border-y-0 border-l-0">
-            <h3 className="text-2xl font-black uppercase tracking-tight mb-12">Category Distro</h3>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={ADMIN_PIE_DATA}
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {ADMIN_PIE_DATA.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="grid grid-cols-2 gap-4 mt-8">
-              {ADMIN_PIE_DATA.map((item, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <div className="w-3 h-3" style={{ backgroundColor: COLORS[i] }} />
-                  <span className="text-[10px] font-black uppercase tracking-widest">{item.name}</span>
+            <h3 className="text-2xl font-black uppercase tracking-tight mb-8 italic">Admin Approval</h3>
+            <div className="space-y-6">
+              {pendingAdmins.length === 0 ? (
+                <div className="p-8 modular-border bg-primary-50 text-center border-dashed">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-primary-950/30">No Pending Requests</p>
                 </div>
-              ))}
+              ) : (
+                pendingAdmins.map((admin) => (
+                  <div key={admin.id} className="p-6 modular-border bg-white shadow-sm space-y-4 group hover:bg-primary-950 hover:text-white transition-all">
+                    <div>
+                      <p className="text-xs font-black uppercase">{admin.fullName || admin.email}</p>
+                      <p className="text-[10px] opacity-40 uppercase font-bold tracking-widest">{admin.email}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button 
+                         disabled={!!isProcessing}
+                         onClick={() => handleApprove(admin.id)}
+                         className="flex-1 py-3 bg-accent-sage text-white font-black uppercase text-[9px] tracking-widest flex items-center justify-center gap-2 hover:bg-accent-sage/80 disabled:opacity-50"
+                      >
+                        {isProcessing === admin.id ? <Loader2 size={12} className="animate-spin" /> : <UserCheck size={12} />}
+                        Approve
+                      </button>
+                      <button 
+                        disabled={!!isProcessing}
+                        onClick={() => handleReject(admin.id)}
+                        className="flex-1 py-3 border border-primary-950 text-primary-950 group-hover:border-white group-hover:text-white font-black uppercase text-[9px] tracking-widest flex items-center justify-center gap-2 hover:bg-rose-500 hover:text-white hover:border-rose-500 disabled:opacity-50"
+                      >
+                        {isProcessing === admin.id ? <Loader2 size={12} className="animate-spin" /> : <UserX size={12} />}
+                        Reject
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="mt-12 p-6 bg-primary-50 modular-border">
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] mb-2 leading-relaxed">
+                <ShieldAlert size={14} className="inline mr-2 text-primary-500" />
+                Note: Admin approval requires manual verification of credentials.
+              </p>
             </div>
           </div>
           

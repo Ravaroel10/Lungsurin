@@ -134,13 +134,13 @@ export function Marketplace() {
       </AnimatePresence>
 
       <div className="max-w-[1920px] mx-auto">
-          <div className="px-6 sm:px-8 lg:px-16 flex flex-col lg:flex-row lg:items-end justify-between gap-8 md:gap-12 mb-12 sm:mb-24 py-12 sm:py-20 bg-batik-kawung border-b-2 border-primary-950/20 relative">
+          <div className="px-6 sm:px-8 lg:px-16 flex flex-col lg:flex-row lg:items-end justify-between gap-8 md:gap-12 mb-12 sm:mb-24 py-16 sm:py-24 bg-batik-kawung border-b-2 border-primary-950/20 relative">
             {/* Burger Menu Button */}
             <button 
               onClick={() => setIsSidebarOpen(true)}
-              className="absolute top-8 left-6 lg:left-16 p-4 bg-white border-2 border-primary-950 shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all z-20 group"
+              className="absolute top-6 left-6 lg:left-16 p-3 sm:p-4 bg-white border-2 border-primary-950 shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none transition-all z-20 group"
             >
-              <Menu size={24} className="text-primary-950 group-hover:scale-110 transition-transform" strokeWidth={3} />
+              <Menu size={20} className="text-primary-950 group-hover:scale-110 transition-transform sm:w-6 sm:h-6" strokeWidth={3} />
             </button>
 
             <div className="flex flex-col space-y-6 lg:space-y-8 max-w-4xl mt-16 lg:mt-0">

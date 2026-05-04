@@ -3,10 +3,12 @@ import React from 'react';
 interface LogoProps {
   className?: string;
   size?: number;
-  variant?: 'full' | 'icon';
+  variant?: 'full' | 'icon' | 'large';
 }
 
 export const Logo: React.FC<LogoProps> = ({ className, size = 32, variant = 'full' }) => {
+  const isLarge = variant === 'large';
+  
   return (
     <div className={`flex items-center gap-2 ${className}`}>
       <div 
@@ -20,11 +22,17 @@ export const Logo: React.FC<LogoProps> = ({ className, size = 32, variant = 'ful
           referrerPolicy="no-referrer"
         />
       </div>
-      {variant === 'full' && (
-        <span className="hidden sm:block font-display font-black text-[1.4em] lg:text-[1.8em] tracking-tight text-primary-950 leading-none whitespace-nowrap mt-0.5 uppercase">
+      {(variant === 'full' || variant === 'large') && (
+        <span className={`font-serif font-black text-[#8B1A1A] leading-none whitespace-nowrap ${
+          isLarge 
+            ? "block text-[2.5em] sm:text-[3.2em] lg:text-[4.2em] -mt-4" 
+            : "hidden sm:block text-[1.6em] lg:text-[2.2em] -mt-1"
+        }`}>
           Lungsur<span className="relative inline-flex items-center leading-none">
-            <span className="absolute -top-[0.2em] left-1/2 -translate-x-1/2 w-[0.22em] h-[0.22em] bg-accent-clay rotate-45" />
-            i
+            <span className={`absolute left-1/2 -translate-x-1/2 bg-[#D4AF37] rotate-45 shadow-[1px_1px_2px_rgba(0,0,0,0.1)] ${
+              isLarge ? "w-[0.25em] h-[0.25em] -top-[0.01em]" : "w-[0.22em] h-[0.22em] -top-[0.05em]"
+            }`} />
+            ı
           </span>n
         </span>
       )}

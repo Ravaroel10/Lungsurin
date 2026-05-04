@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { LogIn, Mail, Lock, LogOut } from 'lucide-react';
+import { Logo } from './Logo';
 import { User, UserRole } from '../types';
 import { cn } from '../lib/utils';
 import { motion } from 'motion/react';
@@ -32,11 +33,11 @@ export function LoginPage() {
         animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-md bg-white rounded-[2.5rem] p-10 card-shadow border border-primary-100"
       >
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-primary-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary-500/20">
-            <LogIn className="text-white" size={32} />
+        <div className="text-center mb-10">
+          <div className="flex justify-center mb-10 scale-110">
+            <Logo size={180} variant="large" />
           </div>
-          <h2 className="text-3xl font-display font-bold text-primary-900">Selamat Datang Kembali</h2>
+          <h2 className="text-3xl font-display font-bold text-primary-900 tracking-tighter uppercase">Selamat Datang Kembali</h2>
           <p className="text-primary-900/40 mt-2">Masuk untuk melanjutkan perjalanan keberlanjutan Anda.</p>
         </div>
 
@@ -163,8 +164,11 @@ export function SignupPage() {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-2xl bg-white rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-12 card-shadow border border-primary-100"
       >
-        <div className="text-center mb-10">
-          <h2 className="text-3xl sm:text-4xl font-display font-bold text-primary-900 mb-3">Gabung dalam Gerakan</h2>
+        <div className="text-center mb-12">
+          <div className="flex justify-center mb-12 scale-110">
+            <Logo size={160} variant="large" />
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-display font-bold text-primary-900 mb-3 tracking-tighter uppercase">Gabung dalam Gerakan</h2>
           <p className="text-primary-900/40 text-sm sm:text-base px-4">Langkahlah ke masa depan fashion berkelanjutan.</p>
         </div>
 

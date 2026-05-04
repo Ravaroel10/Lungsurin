@@ -22,6 +22,7 @@ export interface User {
   premiumProofURL?: string;
   vouchers?: Voucher[];
   purchasedCount?: number;
+  status?: 'active' | 'pending' | 'suspended';
 }
 
 export interface Voucher {

@@ -23,6 +23,48 @@ import { useLocation } from 'react-router-dom';
 import { CartProvider } from './contexts/CartContext';
 import { ChatProvider } from './contexts/ChatContext';
 import { IntroModal } from './components/IntroModal';
+import { motion, AnimatePresence } from 'motion/react';
+import { Clock, ExternalLink, LogOut } from 'lucide-react';
+
+function PendingApproval() {
+  const { logout } = useAuth();
+  return (
+    <div className="min-h-[80vh] flex items-center justify-center px-4">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-md w-full bg-white modular-border p-10 text-center space-y-8 shadow-[12px_12px_0px_rgba(0,0,0,1)]"
+      >
+        <div className="w-20 h-20 bg-primary-50 rounded-full flex items-center justify-center mx-auto">
+          <Clock size={40} className="text-primary-500 animate-pulse" />
+        </div>
+        <div className="space-y-4">
+          <h2 className="text-3xl font-display font-black uppercase tracking-tighter text-primary-950">Akun Menunggu <span className="text-primary-500">Konfirmasi</span></h2>
+          <p className="text-primary-900/60 font-medium leading-relaxed">
+            Permintaan akses administrator Anda telah diterima. Untuk mempercepat proses verifikasi, silakan hubungi tim kami melalui WhatsApp.
+          </p>
+        </div>
+        <div className="space-y-4">
+          <a 
+            href="https://wa.me/628119410609" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="w-full py-4 bg-[#25D366] text-white font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-3 hover:scale-[1.02] transition-transform shadow-[4px_4px_0px_rgba(0,0,0,1)] active:translate-y-1 active:shadow-none"
+          >
+            Konfirmasi Via WhatsApp <ExternalLink size={14} />
+          </a>
+          <button 
+            onClick={() => logout()}
+            className="w-full py-4 border-2 border-primary-950 text-primary-950 font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-3 hover:bg-primary-50 transition-colors"
+          >
+            Keluar Akun <LogOut size={14} />
+          </button>
+        </div>
+        <p className="text-[10px] font-bold text-primary-900/30 uppercase tracking-[0.2em]">Status: Menunggu Persetujuan Tim Owner</p>
+      </motion.div>
+    </div>
+  );
+}
 
 function PrivateRoute({ children, role }: { children: React.ReactNode, role?: string }) {
   const { user, isLoading } = useAuth();
@@ -53,6 +95,10 @@ function UnifiedDashboard() {
   }, [user]);
   
   if (!user) return <Navigate to="/login" />;
+  
+  if (user.role === 'ADMIN' && user.status === 'pending') {
+    return <PendingApproval />;
+  }
 
   const renderDashboard = () => {
     switch (user.role) {
@@ -78,6 +124,10 @@ function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
   const isChatRoute = location.pathname === '/chat';
+
+  if (user && user.role === 'ADMIN' && user.status === 'pending' && location.pathname !== '/dashboard') {
+    return <Navigate to="/dashboard" />;
+  }
 
   React.useEffect(() => {
     window.scrollTo(0, 0);
@@ -190,19 +240,19 @@ function AppContent() {
           <div className="space-y-6">
             <h4 className="text-white text-lg tracking-widest">Bantuan</h4>
             <ul className="space-y-3 text-white/50 text-xs font-bold uppercase tracking-widest">
-              <li><a href="#" className="hover:text-white transition-colors">Pusat Bantuan</a></li>
+              <li><a href="https://wa.me/628119410609" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Pusat Bantuan</a></li>
               <li><a href="#" className="hover:text-white transition-colors">Pelacakan Pengiriman</a></li>
               <li><a href="#" className="hover:text-white transition-colors">Kebijakan Retur</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Kontak Kami</a></li>
+              <li><a href="https://wa.me/628119410609" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Kontak Kami</a></li>
             </ul>
           </div>
 
           <div className="space-y-6">
             <h4 className="text-white text-lg tracking-widest">Kontak</h4>
             <div className="space-y-3 text-white/50 text-xs font-bold uppercase tracking-widest leading-loose">
-              <p>Email: support@lungsurin.com</p>
-              <p>Telepon: +62 812-3456-7890</p>
-              <p>Studio: Jl. Ekonomi Hijau No. 123, Jakarta</p>
+              <p>Email: Lungsurin.id@gmail.com</p>
+              <p>Telepon: +62 811-941-0609</p>
+              <p>Alamat: SMA Unggulan Rushd, Kebayanan 1, Jati, Masaran, Kabupaten Sragen, Jawa Tengah 57282</p>
             </div>
           </div>
         </div>

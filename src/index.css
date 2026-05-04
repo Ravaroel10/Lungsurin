@@ -1,10 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Space+Grotesk:wght@300..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&family=Space+Grotesk:wght@300..700&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-display: 'Space Grotesk', sans-serif;
-  --font-serif: 'Playfair Display', serif;
+  --font-serif: 'Cormorant Garamond', serif;
   --font-inter: 'Inter', sans-serif;
 
   --color-primary-50: #FFFDF8; /* Lighter background */
@@ -55,7 +55,7 @@
     background-image: none; /* Removed confusing background gradients for clarity */
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-serif font-black tracking-tight leading-[1.05];
+    @apply font-serif font-bold tracking-tight leading-[1.05];
   }
 }
 

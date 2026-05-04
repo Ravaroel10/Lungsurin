@@ -87,14 +87,14 @@ export function Home() {
             className="w-full max-w-3xl bg-white border-4 border-primary-950 p-12 md:p-24 text-center shadow-2xl space-y-12 rounded-none bg-batik"
           >
             <div className="space-y-8">
-              <div className="mx-auto flex justify-center py-4">
-                <Logo size={80} />
+              <div className="mx-auto flex justify-center py-6 sm:py-8">
+                <Logo size={120} />
               </div>
-              <div className="space-y-4">
-                <h2 className="text-5xl md:text-7xl font-display font-black uppercase tracking-tighter leading-none text-primary-950">
-                  Lestarikan <br /><span className="text-primary-500">Pakaian Adat</span>
+              <div className="space-y-6 sm:space-y-8">
+                <h2 className="text-5xl sm:text-6xl md:text-8xl font-serif font-bold tracking-tight leading-[0.85] text-primary-950">
+                  Lestarikan <br /><span className="text-[#8B1A1A]">Pakaian Adat</span>
                 </h2>
-                <p className="text-black font-bold text-xl max-w-lg mx-auto leading-relaxed">
+                <p className="text-primary-900/60 font-medium text-base sm:text-lg md:text-xl max-w-lg mx-auto leading-relaxed px-4">
                   Ekosistem circular fashion berbasis AI khusus busana tradisional Indonesia. Berdayakan budaya, kurangi limbah.
                 </p>
               </div>
@@ -210,7 +210,7 @@ export function Home() {
         </div>
 
         {/* Quick Menu Icons (Shopee influence) */}
-        <div className="bg-white border-2 border-primary-950 p-4 sm:p-8 grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-4 sm:gap-8 shadow-sm bg-batik">
+        <div className="bg-white border-2 border-primary-950 p-4 sm:p-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 sm:gap-8 shadow-sm bg-batik">
           {[
             { icon: Sparkles, label: 'Scan Baju', path: '/analyze', color: 'bg-primary-950 text-white' },
             { icon: BookOpen, label: 'Edukasi', path: '/education', color: 'bg-primary-500 text-white' },
@@ -223,7 +223,7 @@ export function Home() {
               <div className={cn("w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-none flex items-center justify-center transition-all group-hover:scale-110 shadow-md", item.color)}>
                 <item.icon className="w-8 h-8 sm:w-10 sm:h-10" />
               </div>
-              <span className="text-[9px] sm:text-[11px] font-black uppercase tracking-widest text-primary-950 group-hover:text-primary-500 transition-colors text-center">{item.label}</span>
+              <span className="text-[9px] sm:text-[11px] font-black uppercase tracking-widest text-primary-950 group-hover:text-primary-500 transition-colors text-center whitespace-nowrap">{item.label}</span>
             </Link>
           ))}
         </div>

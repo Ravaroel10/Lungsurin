@@ -223,22 +223,22 @@ export function AIAnalysis() {
             <h2 className="text-3xl lg:text-5xl leading-none font-display font-black uppercase tracking-tighter text-center lg:text-left">Mulai Pemindaian</h2>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pb-4">
             {selectedImages.map((img, idx) => (
               <div 
                 key={idx}
                 className={cn(
-                  "relative aspect-square w-full flex flex-col items-center justify-center transition-all overflow-hidden group rounded-2xl",
+                  "relative aspect-[4/5] w-full flex flex-col items-center justify-center transition-all duration-500 overflow-hidden group rounded-3xl",
                   img 
-                    ? "grayscale-0 border-solid border border-primary-100 bg-white" 
-                    : "grayscale border-2 border-dashed border-primary-300/60 bg-primary-50/50 hover:bg-primary-100/50 hover:border-primary-400"
+                    ? "grayscale-0 border-solid border-2 border-primary-100 bg-white shadow-lg" 
+                    : "grayscale border-2 border-dashed border-primary-300/30 bg-primary-100/10 hover:bg-primary-100/20 hover:border-primary-400 hover:shadow-inner"
                 )}
               >
                 {img ? (
                   <>
                     <img src={img} alt={VIEW_LABELS[idx]} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                     <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="absolute top-2 left-2 bg-black/60 text-white text-[8px] font-black uppercase px-2 py-1 rounded-full backdrop-blur-md">
+                    <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md text-primary-950 text-[10px] font-black uppercase px-4 py-2 rounded-full shadow-sm">
                       {VIEW_LABELS[idx]}
                     </div>
                     <button 
@@ -248,19 +248,20 @@ export function AIAnalysis() {
                         setSelectedImages(newImages);
                         setResult(null);
                       }}
-                      className="absolute top-2 right-2 p-2 modular-border bg-white text-primary-950 hover:bg-black hover:text-white transition-all shadow-xl z-10 scale-75"
+                      className="absolute top-4 right-4 p-3 modular-border bg-white text-primary-950 hover:bg-black hover:text-white transition-all shadow-xl z-10"
                     >
                       <RefreshCcw className="w-4 h-4" strokeWidth={2} />
                     </button>
                   </>
                 ) : (
                   <label 
-                    className="w-full h-full flex flex-col items-center justify-center cursor-pointer p-2 transition-all duration-500 ease-in-out text-primary-950"
+                    className="w-full h-full flex flex-col items-center justify-center cursor-pointer p-6 transition-all duration-500 ease-in-out text-primary-950"
                   >
-                    <div className="w-10 h-10 rounded-full border-2 border-primary-300/60 flex items-center justify-center mb-2 bg-white group-hover:bg-primary-500 group-hover:text-white transition-colors">
-                      <Camera className="w-4 h-4" />
+                    <div className="w-12 h-12 rounded-full border-2 border-primary-300/60 flex items-center justify-center mb-4 bg-white group-hover:bg-primary-500 group-hover:text-white transition-colors shadow-sm">
+                      <Camera className="w-5 h-5" />
                     </div>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-center">{VIEW_LABELS[idx]}</span>
+                    <span className="text-xs font-black uppercase tracking-[0.2em] text-center whitespace-nowrap">{VIEW_LABELS[idx]}</span>
+                    <p className="text-[9px] font-bold text-primary-900/30 uppercase mt-4">Ketuk untuk Ambil Foto</p>
                     <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(idx, e)} />
                   </label>
                 )}

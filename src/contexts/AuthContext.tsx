@@ -32,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         fullName: firebaseUser.displayName || additionalData.fullName || 'New User',
         username: (firebaseUser.email?.split('@')[0] || 'user') + Math.floor(Math.random() * 1000),
         role: additionalData.role || 'USER',
+        status: additionalData.role === 'ADMIN' ? 'pending' : 'active',
         favorites: [],
         points: 50,
         streak: 1,
