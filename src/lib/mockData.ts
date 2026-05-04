@@ -145,12 +145,18 @@ export const MOCK_ORDERS: Order[] = [
   {
     id: 'o1',
     userId: 'u1',
-    sellerId: 's1',
+    customerName: 'Rafael Eco',
+    customerPhone: '+1234567890',
+    shippingAddress: '123 Green St, Sustainability City',
+    paymentMethod: 'DANA',
     items: [
-      { productId: 'p1', name: 'Vintage Levi\'s Upcycled Denim Jacket', price: 80.49, quantity: 1 }
+      { id: 'p1', name: 'Vintage Levi\'s Upcycled Denim Jacket', price: 80.49, quantity: 1, image: 'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?q=80&w=800&auto=format&fit=crop' }
     ],
-    total: 80.49,
-    status: 'COMPLETED',
-    date: '2026-04-15',
+    total: 1207350,
+    subtotal: 1207350,
+    shippingFee: 25000,
+    protectionFee: 1000,
+    status: 'SELESAI',
+    createdAt: { toDate: () => new Date('2026-04-15') },
   }
 ];

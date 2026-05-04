@@ -1,17 +1,82 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { User, Mail, MapPin, Phone, Calendar, LogOut, Edit3, Save, Camera, Shield, MessageSquare, ShoppingBag, Heart, Crown, X } from 'lucide-react';
+import { User, Mail, MapPin, Phone, Calendar, LogOut, Edit3, Save, Camera, Shield, MessageSquare, ShoppingBag, Heart, Crown, X, Check } from 'lucide-react';
 import { formatCurrency, formatDate, cn } from '../lib/utils';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { MOCK_ORDERS } from '../lib/mockData';
+import Cropper, { Area } from 'react-easy-crop';
+
+// Helper to create cropped image
+const getCroppedImg = (imageSrc: string, pixelCrop: Area): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.src = imageSrc;
+    image.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      if (!ctx) {
+        reject(new Error('No 2d context'));
+        return;
+      }
+
+      canvas.width = pixelCrop.width;
+      canvas.height = pixelCrop.height;
+
+      ctx.drawImage(
+        image,
+        pixelCrop.x,
+        pixelCrop.y,
+        pixelCrop.width,
+        pixelCrop.height,
+        0,
+        0,
+        pixelCrop.width,
+        pixelCrop.height
+      );
+
+      // Quality compression to keep it under Firestore limits
+      resolve(canvas.toDataURL('image/jpeg', 0.8));
+    };
+    image.onerror = (error) => reject(error);
+  });
+};
 
 export function UserProfile() {
   const { user, logout, updateUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState(user);
+  
+  // Cropping states
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  const [isCropping, setIsCropping] = useState(false);
 
   if (!user) return null;
+
+  const onCropComplete = useCallback((_: Area, croppedAreaPixels: Area) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
+
+  const handleCropSave = async () => {
+    if (imageToCrop && croppedAreaPixels) {
+      try {
+        setIsCropping(true);
+        const croppedImage = await getCroppedImg(imageToCrop, croppedAreaPixels);
+        await updateUser({ avatar: croppedImage });
+        setImageToCrop(null);
+        (window as any).addNotification('Foto profil berhasil diperbarui.', 'success');
+      } catch (e) {
+        console.error(e);
+        (window as any).addNotification('Gagal memproses foto.', 'error');
+      } finally {
+        setIsCropping(false);
+      }
+    }
+  };
 
   const handleUpdate = () => {
     if (editedUser && user) {
@@ -62,50 +127,14 @@ export function UserProfile() {
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        if (file.size > 5 * 1024 * 1024) { // 5MB limit for upload
-                          (window as any).addNotification('Image too large. Please select a photo under 5MB.', 'error');
+                        if (file.size > 5 * 1024 * 1024) {
+                          (window as any).addNotification('File terlalu besar. Maksimal 5MB.', 'error');
                           return;
                         }
 
                         const reader = new FileReader();
-                        reader.onloadend = async () => {
-                          const img = new Image();
-                          img.onload = async () => {
-                            // Create canvas for compression
-                            const canvas = document.createElement('canvas');
-                            let width = img.width;
-                            let height = img.height;
-                            
-                            // Max dimensions 400x400
-                            const MAX_DIM = 400;
-                            if (width > height) {
-                              if (width > MAX_DIM) {
-                                height *= MAX_DIM / width;
-                                width = MAX_DIM;
-                               }
-                            } else {
-                              if (height > MAX_DIM) {
-                                width *= MAX_DIM / height;
-                                height = MAX_DIM;
-                              }
-                            }
-                            
-                            canvas.width = width;
-                            canvas.height = height;
-                            const ctx = canvas.getContext('2d');
-                            ctx?.drawImage(img, 0, 0, width, height);
-                            
-                            // High quality JPEG compression
-                            const base64 = canvas.toDataURL('image/jpeg', 0.8);
-                            
-                            try {
-                              await updateUser({ avatar: base64 });
-                              (window as any).addNotification('Profile photograph synchronized and optimized.', 'success');
-                            } catch (err) {
-                              (window as any).addNotification('Failed to update avatar.', 'error');
-                            }
-                          };
-                          img.src = reader.result as string;
+                        reader.onloadend = () => {
+                          setImageToCrop(reader.result as string);
                         };
                         reader.readAsDataURL(file);
                       }
@@ -293,7 +322,7 @@ export function UserProfile() {
                       </div>
                       <div className="space-y-1 min-w-0">
                         <p className="text-lg md:text-xl font-display font-black uppercase tracking-tight underline decoration-black/10 group-hover:decoration-black truncate">Ref: #{order.id.toUpperCase()}</p>
-                        <p className="text-[10px] text-text-muted font-black uppercase tracking-[0.3em]">{formatDate(order.date)}</p>
+                        <p className="text-[10px] text-text-muted font-black uppercase tracking-[0.3em]">{formatDate(order.createdAt?.toDate ? order.createdAt.toDate() : order.createdAt)}</p>
                       </div>
                     </div>
                     <div className="flex items-center justify-between md:justify-end gap-8 md:gap-16">
@@ -310,6 +339,72 @@ export function UserProfile() {
           </div>
         </div>
       </div>
+
+      {/* Cropper Modal */}
+      <AnimatePresence>
+        {imageToCrop && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setImageToCrop(null)}
+              className="absolute inset-0 bg-black/90 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative w-full max-w-xl aspect-square bg-white modular-border overflow-hidden flex flex-col"
+            >
+              <div className="flex-1 relative">
+                <Cropper
+                  image={imageToCrop}
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={1}
+                  onCropChange={setCrop}
+                  onCropComplete={onCropComplete}
+                  onZoomChange={setZoom}
+                  cropShape="round"
+                  showGrid={false}
+                />
+              </div>
+              <div className="p-8 bg-white space-y-6">
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-text-muted">Zoom Penyesuaian</label>
+                  <input
+                    type="range"
+                    value={zoom}
+                    min={1}
+                    max={3}
+                    step={0.1}
+                    aria-labelledby="Zoom"
+                    onChange={(e) => setZoom(Number(e.target.value))}
+                    className="w-full h-1 bg-[#E5E5DE] rounded-lg appearance-none cursor-pointer accent-black"
+                  />
+                </div>
+                <div className="flex gap-4">
+                  <button 
+                    onClick={() => setImageToCrop(null)}
+                    disabled={isCropping}
+                    className="flex-1 py-4 modular-border border-accent-clay/20 text-accent-clay font-display font-black uppercase tracking-widest text-[10px] hover:bg-accent-clay/10"
+                  >
+                    Batal
+                  </button>
+                  <button 
+                    onClick={handleCropSave}
+                    disabled={isCropping}
+                    className="flex-1 py-4 bg-primary-950 text-white font-display font-black uppercase tracking-widest text-[10px] hover:bg-black transition-all flex items-center justify-center gap-2"
+                  >
+                    {isCropping ? <div className="loading-dots">Memproses</div> : <><Check size={14} /> Atur Foto</>}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

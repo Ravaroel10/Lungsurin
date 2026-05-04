@@ -1,6 +1,6 @@
 {
   "name": "Lungsurin",
-  "description": "A circular fashion ecosystem for upcycling, resale, and repair with AI analysis.",
+  "description": "Ekosistem busana sirkular untuk pelestarian pakaian adat melalui upcycling, resale, dan repair dengan teknologi AI.",
   "requestFramePermissions": [
     "camera"
   ],

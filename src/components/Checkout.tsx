@@ -13,6 +13,7 @@ export function Checkout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [orderMessage, setOrderMessage] = useState('');
   
   const selectedItemIds: string[] = location.state?.selectedItemIds || [];
   
@@ -25,11 +26,22 @@ export function Checkout() {
   const checkoutItems = cart.filter(item => selectedItemIds.includes(item.id));
   const subtotal = checkoutItems.reduce((acc, item) => acc + (item.price * 15000 * item.quantity), 0);
   const protectionFee = 5400; // Mock Rp5.400
-  const shippingFee = 5000; // Mock Rp5.000
+  
+  // Dynamic Shipping Calculation: Base 5000 + 2500 per item
+  const shippingFee = 5000 + (checkoutItems.reduce((acc, item) => acc + item.quantity, 0) * 2500);
   const total = subtotal + protectionFee + shippingFee;
+
+  const hasAddress = user?.address && user.address.trim().length > 10;
 
   const handlePlaceOrder = async () => {
     if (!user) return;
+    
+    if (!hasAddress) {
+      (window as any).addNotification('Silakan lengkapi alamat pengiriman di profil Anda sebelum memesan.', 'error');
+      navigate('/profile');
+      return;
+    }
+
     setIsProcessing(true);
     (window as any).addNotification('Memproses arsip pesanan...', 'info');
     
@@ -39,6 +51,10 @@ export function Checkout() {
       const orderRef = doc(collection(db, 'orders'));
       const orderData = {
         userId: user.id,
+        customerName: user.fullName || 'Rafael Gultom',
+        customerPhone: user.phoneNumber || '811 9410 609',
+        shippingAddress: user.address,
+        message: orderMessage,
         items: checkoutItems.map(item => ({
           id: item.id,
           name: item.name,
@@ -51,6 +67,7 @@ export function Checkout() {
         shippingFee,
         total,
         status: 'PROSES',
+        paymentMethod: 'COD',
         createdAt: serverTimestamp()
       };
       
@@ -104,12 +121,20 @@ export function Checkout() {
               <div className="font-extrabold flex-shrink-0 text-sm">
                 {user?.fullName || 'Rafael Gultom'} (+62) {user?.phoneNumber || '811 9410 609'}
               </div>
-              <div className="text-primary-950/70 flex-1 font-medium text-xs leading-relaxed">
-                {user?.address || 'Kebayanan 1, Jati, Kec. Masaran, Kabupaten Sragen, Jawa Tengah 57282 (SMA UNGGULAN RUSHD), KAB. SRAGEN - SRAGEN, JAWA TENGAH, ID 57282'}
+              <div className={cn(
+                "flex-1 font-medium text-xs leading-relaxed",
+                hasAddress ? "text-primary-950/70" : "text-[#D0021B] italic font-black"
+              )}>
+                {hasAddress ? user?.address : 'ALAMAT BELUM DISET. SILAKAN KLIK UBAH UNTUK MELENGKAPI DATA.'}
               </div>
               <div className="flex items-center gap-4 flex-shrink-0">
-                <span className="bg-black text-white px-2 py-0.5 text-[9px] uppercase font-black">Utama</span>
-                <button className="text-primary-500 font-bold uppercase text-[9px] tracking-widest cursor-pointer hover:underline">Ubah</button>
+                {hasAddress && <span className="bg-black text-white px-2 py-0.5 text-[9px] uppercase font-black">Utama</span>}
+                <button 
+                  onClick={() => navigate('/profile')}
+                  className="text-primary-500 font-bold uppercase text-[9px] tracking-widest cursor-pointer hover:underline"
+                >
+                  Ubah
+                </button>
               </div>
             </div>
           </div>
@@ -184,6 +209,8 @@ export function Checkout() {
                    <input 
                     type="text" 
                     placeholder="(Opsional) Tinggalkan pesan" 
+                    value={orderMessage}
+                    onChange={(e) => setOrderMessage(e.target.value)}
                     className="border border-[#F5F5F5] px-3 py-2 w-full focus:outline-none font-medium text-[11px]" 
                    />
                 </div>
@@ -193,8 +220,8 @@ export function Checkout() {
                       <div className="flex flex-col flex-1 pl-12 relative">
                          <div className="flex justify-between items-center">
                             <span className="font-black text-primary-950 text-[13px] uppercase tracking-wide">Hemat Kargo</span>
-                            <span className="text-[#D0021B] font-bold uppercase text-[9px] cursor-pointer hover:underline absolute right-12 top-0.5">Ubah</span> 
-                            <span className="font-black text-[13px] ml-auto">Rp5.000</span>
+                            <span className="text-[#D0021B] font-bold uppercase text-[9px] cursor-pointer hover:underline absolute right-12 top-0.5" onClick={() => (window as any).addNotification('Hanya tersedia pengiriman reguler hemat saat ini.', 'info')}>Ubah</span> 
+                            <span className="font-black text-[13px] ml-auto">{formatRp(shippingFee)}</span>
                          </div>
                          <span className="text-[#D0021B] font-bold text-[9px] uppercase tracking-tight mt-1">Estimasi tiba 3 - 5 Hari</span>
                       </div>

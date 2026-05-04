@@ -134,7 +134,7 @@ export function UserDashboard() {
       const userOrders = MOCK_ORDERS.filter(o => o.userId === user.id);
       
       const orderDetails = userOrders.flatMap(o => o.items).map(item => {
-        const prod = MOCK_PRODUCTS.find(p => p.id === item.productId);
+        const prod = MOCK_PRODUCTS.find(p => p.id === item.id);
         return prod ? prod.name : 'Unknown Item';
       }).join(', ');
 
@@ -349,19 +349,19 @@ export function UserDashboard() {
                 <div className="lg:col-span-2">
                   <div className="space-y-6">
                     <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
-                      <span className={cn(order.status === 'COMPLETED' ? "text-primary-100" : "text-white")}>
-                        Status: {order.status === 'COMPLETED' ? 'Delivered' : 'In Transit'}
+                      <span className={cn(order.status === 'SELESAI' ? "text-primary-100" : "text-white")}>
+                        Status: {order.status === 'SELESAI' ? 'Delivered' : 'In Transit'}
                       </span>
-                      <span className="text-white/60">{order.status === 'COMPLETED' ? '100%' : '75%'} complete</span>
+                      <span className="text-white/60">{order.status === 'SELESAI' ? '100%' : '75%'} complete</span>
                     </div>
                     <div className="h-3 bg-white/5 rounded-none w-full relative overflow-hidden border border-white/10">
                       <motion.div 
                         initial={{ width: 0 }}
-                        animate={{ width: order.status === 'COMPLETED' ? '100%' : '75%' }}
+                        animate={{ width: order.status === 'SELESAI' ? '100%' : '75%' }}
                         transition={{ duration: 1.5, ease: "easeOut" }}
                         className={cn(
                           "absolute inset-y-0 left-0 rounded-none",
-                          order.status === 'COMPLETED' ? "bg-primary-100" : "bg-white"
+                          order.status === 'SELESAI' ? "bg-primary-100" : "bg-white"
                         )} 
                       />
                     </div>

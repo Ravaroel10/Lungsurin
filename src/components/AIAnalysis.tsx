@@ -12,9 +12,10 @@ import { useAuth } from '../contexts/AuthContext';
 export function AIAnalysis() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImages, setSelectedImages] = useState<(string | null)[]>([null, null, null, null]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const VIEW_LABELS = ['Depan', 'Belakang', 'Kiri', 'Kanan'];
   const [editDetails, setEditDetails] = useState({
     name: '',
     price: '',
@@ -41,7 +42,7 @@ export function AIAnalysis() {
     detectedFeatures: string[];
   } | null>(null);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -70,9 +71,10 @@ export function AIAnalysis() {
           const ctx = canvas.getContext('2d');
           ctx?.drawImage(img, 0, 0, width, height);
           
-          // Compress to JPEG with medium quality to ensure it fits in 1MB Firestore limit
           const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-          setSelectedImage(dataUrl);
+          const newImages = [...selectedImages];
+          newImages[index] = dataUrl;
+          setSelectedImages(newImages);
         };
         img.src = reader.result as string;
       };
@@ -81,21 +83,31 @@ export function AIAnalysis() {
   };
 
   const runAnalysis = async () => {
-    if (!selectedImage) return;
+    if (selectedImages.some(img => img === null)) {
+      (window as any).addNotification('Harap unggah keempat sudut foto untuk akurasi maksimal.', 'error');
+      return;
+    }
     setIsAnalyzing(true);
     setResult(null);
 
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      const model = 'gemini-3-flash-preview';
+      const model = 'gemini-1.5-flash';
       
+      const imageParts = selectedImages.map((img, idx) => ({
+        inlineData: { 
+          mimeType: "image/jpeg", 
+          data: img!.split(',')[1] 
+        }
+      }));
+
       const response = await ai.models.generateContent({
         model,
         contents: [
           {
             parts: [
-              { text: "Analisis gambar pakaian adat Indonesia ini. Klasifikasikan ke dalam jalur sirkular: 'RESELL' (layak dipakai dan dijual kembali), 'REPAIR' (sedikit rusak), atau 'UPCYCLE' (sudah parah, perlu modifikasi kreatif oleh pengrajin). Return a JSON object with: 'recommendation' (RESELL/REPAIR/UPCYCLE), 'confidence' (number), 'condition' (object with fabric, stain, damage, fading), 'reasoning' (string), 'suggestedAction' (string), 'environmentalImpact' (object with wasteReducedKg and co2SavedKg numbers), 'valuePotential' (Low/Medium/High), 'recommendedPrice' (string), and 'detectedFeatures' (array of strings, e.g., 'Batik Solo', 'Tenun Ikat', 'Kebaya')." },
-              { inlineData: { mimeType: "image/jpeg", data: selectedImage.split(',')[1] } }
+              { text: "Analisis 4 foto pakaian adat Indonesia ini (tampak depan, belakang, kiri, dan kanan) untuk akurasi maksimal. Berdasarkan semua sudut pandang ini, klasifikasikan ke dalam jalur sirkular: 'RESELL' (layak dipakai dan dijual kembali), 'REPAIR' (sedikit rusak), atau 'UPCYCLE' (sudah parah, perlu modifikasi kreatif oleh pengrajin). Kembalikan objek JSON dengan: 'recommendation' (RESELL/REPAIR/UPCYCLE), 'confidence' (number), 'condition' (object dengan fabric, stain, damage, fading), 'reasoning' (string), 'suggestedAction' (string), 'environmentalImpact' (object dengan wasteReducedKg and co2SavedKg numbers), 'valuePotential' (Low/Medium/High), 'recommendedPrice' (string), and 'detectedFeatures' (array strings, misal: 'Batik Solo', 'Tenun Ikat', 'Kebaya')." },
+              ...imageParts
             ]
           }
         ],
@@ -160,7 +172,7 @@ export function AIAnalysis() {
         price: parseFloat(editDetails.price) || 50,
         category: "Fashion", // Default or could be inferred
         condition: "Good", // Default
-        images: [selectedImage || 'https://images.unsplash.com/photo-1582200843468-22340eccdbfc?q=80&w=800&auto=format&fit=crop'],
+        images: selectedImages.filter((img): img is string => img !== null),
         type: result.recommendation === 'UPCYCLE' ? 'UPCYCLED' : 'CURATED',
         analysisType: result.recommendation,
         impact: result.environmentalImpact,
@@ -211,47 +223,55 @@ export function AIAnalysis() {
             <h2 className="text-3xl lg:text-5xl leading-none font-display font-black uppercase tracking-tighter text-center lg:text-left">Mulai Pemindaian</h2>
           </div>
 
-          <div 
-            className={cn(
-              "relative aspect-square w-full max-w-[500px] mx-auto flex flex-col items-center justify-center transition-all overflow-hidden group rounded-[2rem]",
-              selectedImage 
-                ? "grayscale-0 border-solid border border-primary-100 bg-white" 
-                : "grayscale border-2 border-dashed border-primary-300/60 bg-primary-50/50 hover:bg-primary-100/50 hover:border-primary-400"
-            )}
-          >
-            {selectedImage ? (
-              <>
-                <img src={selectedImage} alt="Preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <button 
-                  onClick={() => { setSelectedImage(null); setResult(null); }}
-                  className="absolute top-4 right-4 sm:top-6 sm:right-6 p-3 sm:p-4 modular-border bg-white text-primary-950 hover:bg-black hover:text-white transition-all shadow-xl z-10"
-                >
-                  <RefreshCcw className="w-[18px] h-[18px] sm:w-5 sm:h-5" strokeWidth={1.5} />
-                </button>
-              </>
-            ) : (
-              <label 
-                className="w-full h-full flex flex-col items-center justify-center cursor-pointer p-6 sm:p-10 transition-all duration-500 ease-in-out text-primary-950"
+          <div className="grid grid-cols-2 gap-4">
+            {selectedImages.map((img, idx) => (
+              <div 
+                key={idx}
+                className={cn(
+                  "relative aspect-square w-full flex flex-col items-center justify-center transition-all overflow-hidden group rounded-2xl",
+                  img 
+                    ? "grayscale-0 border-solid border border-primary-100 bg-white" 
+                    : "grayscale border-2 border-dashed border-primary-300/60 bg-primary-50/50 hover:bg-primary-100/50 hover:border-primary-400"
+                )}
               >
-                <motion.div 
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                  whileTap={{ scale: 0.9 }}
-                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-primary-300/60 flex items-center justify-center mb-4 sm:mb-6 bg-white group-hover:bg-primary-500 group-hover:text-white group-hover:border-primary-500 transition-colors shadow-sm"
-                >
-                  <Upload className="w-6 h-6 sm:w-8 sm:h-8" strokeWidth={1.5} />
-                </motion.div>
-                <span className="text-xl sm:text-2xl font-display font-black uppercase tracking-tight text-center">Unggah Spesimen</span>
-                <span className="text-[10px] font-bold uppercase tracking-[0.3em] mt-4 text-primary-950/40 text-center">Klik untuk melacak (JPG / PNG)</span>
-                <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
-              </label>
-            )}
+                {img ? (
+                  <>
+                    <img src={img} alt={VIEW_LABELS[idx]} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute top-2 left-2 bg-black/60 text-white text-[8px] font-black uppercase px-2 py-1 rounded-full backdrop-blur-md">
+                      {VIEW_LABELS[idx]}
+                    </div>
+                    <button 
+                      onClick={() => {
+                        const newImages = [...selectedImages];
+                        newImages[idx] = null;
+                        setSelectedImages(newImages);
+                        setResult(null);
+                      }}
+                      className="absolute top-2 right-2 p-2 modular-border bg-white text-primary-950 hover:bg-black hover:text-white transition-all shadow-xl z-10 scale-75"
+                    >
+                      <RefreshCcw className="w-4 h-4" strokeWidth={2} />
+                    </button>
+                  </>
+                ) : (
+                  <label 
+                    className="w-full h-full flex flex-col items-center justify-center cursor-pointer p-2 transition-all duration-500 ease-in-out text-primary-950"
+                  >
+                    <div className="w-10 h-10 rounded-full border-2 border-primary-300/60 flex items-center justify-center mb-2 bg-white group-hover:bg-primary-500 group-hover:text-white transition-colors">
+                      <Camera className="w-4 h-4" />
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-center">{VIEW_LABELS[idx]}</span>
+                    <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(idx, e)} />
+                  </label>
+                )}
+              </div>
+            ))}
           </div>
 
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            disabled={!selectedImage || isAnalyzing}
+            disabled={selectedImages.some(img => img === null) || isAnalyzing}
             onClick={runAnalysis}
             className="btn-fashion w-full py-6 disabled:opacity-50 disabled:cursor-not-allowed text-center flex items-center justify-center gap-4 text-xl"
           >
@@ -261,7 +281,7 @@ export function AIAnalysis() {
                 Menganalisis Detail...
               </>
             ) : (
-              'Analisis Serat & Kondisi'
+              selectedImages.some(img => img === null) ? 'Lengkapi 4 Foto' : 'Analisis Serat & Kondisi'
             )}
           </motion.button>
         </div>

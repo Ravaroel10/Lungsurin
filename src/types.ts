@@ -79,16 +79,24 @@ export interface Review {
 export interface Order {
   id: string;
   userId: string;
-  sellerId: string;
+  customerName?: string;
+  customerPhone?: string;
+  shippingAddress?: string;
+  message?: string;
+  paymentMethod?: string;
   items: {
-    productId: string;
+    id: string;
     name: string;
     price: number;
     quantity: number;
+    image: string;
   }[];
   total: number;
-  status: 'PENDING' | 'SHIPPED' | 'COMPLETED';
-  date: string;
+  subtotal: number;
+  shippingFee: number;
+  protectionFee: number;
+  status: 'PROSES' | 'DIKIRIM' | 'SELESAI' | 'DIBATALKAN';
+  createdAt: any;
   trackingNumber?: string;
 }
 
