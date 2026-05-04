@@ -90,10 +90,11 @@ export function AIAnalysis() {
     setIsAnalyzing(true);
     setResult(null);
 
-    const getMedianPrice = (priceStr: string): string => {
+    const getMedianPrice = (priceStr: string | undefined | null): string => {
+      if (!priceStr) return '150000';
       const cleanStr = priceStr.replace(/\./g, '');
       const matches = cleanStr.match(/\d+/g);
-      if (!matches || matches.length === 0) return '50';
+      if (!matches || matches.length === 0) return '150000';
       const prices = matches.map(m => parseInt(m, 10));
       if (prices.length >= 2) {
         return Math.floor((prices[0] + prices[1]) / 2).toString();
@@ -103,7 +104,7 @@ export function AIAnalysis() {
 
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      const model = 'gemini-1.5-pro';
+      const model = 'gemini-2.0-flash';
       
       const imageParts = selectedImages.map((img) => ({
         inlineData: { 
@@ -117,7 +118,7 @@ export function AIAnalysis() {
         contents: [
           {
             parts: [
-              { text: "Anda adalah pakar kurator tekstil tradisional Indonesia. Analisis 2 foto pakaian adat ini (tampak depan dan belakang) dengan ketelitian sangat tinggi. Identifikasi jenis kain (Batik, Tenun, Songket, dll.), motif spesifik, dan teknik pembuatannya. Periksa tanda-tanda kerusakan mikroskopis seperti serat yang putus, kelunturan warna, noda teknis, atau robekan pada jahitan tradisional. Klasifikasikan ke dalam jalur sirkular: 'RESELL' (kondisi prima, nilai budaya tinggi), 'REPAIR' (memerlukan perbaikan ahli), atau 'UPCYCLE' (kerusakan struktural parah, material harus diolah kembali menjadi produk baru). Kembalikan objek JSON dengan format: { 'recommendation': 'RESELL'|'REPAIR'|'UPCYCLE', 'confidence': number (0-1), 'condition': { 'fabric': string, 'stain': string, 'damage': string, 'fading': string }, 'reasoning': string (detail teknis), 'suggestedAction': string, 'environmentalImpact': { 'wasteReducedKg': number, 'co2SavedKg': number }, 'valuePotential': 'Low'|'Medium'|'High', 'recommendedPrice': string (format Rupiah, e.g., 'Rp 500.000 - Rp 750.000'), 'detectedFeatures': string[] (minimal 5 fitur unik) }. Berikan estimasi harga yang realistis berdasarkan kelangkaan motif dan kondisi fisik kain." },
+              { text: "Anda adalah pakar kurator tekstil tradisional Indonesia. Analisis 2 foto pakaian adat ini (tampak depan dan belakang) dengan ketelitian sangat tinggi. GUNAKAN BAHASA INDONESIA UNTUK SEMUA FIELD TEKS. Identifikasi jenis kain (Batik, Tenun, Songket, dll.), motif spesifik, dan teknik pembuatannya. Periksa tanda-tanda kerusakan mikroskopis seperti serat yang putus, kelunturan warna, noda teknis, atau robekan pada jahitan tradisional. Klasifikasikan ke dalam jalur sirkular: 'RESELL' (kondisi prima, nilai budaya tinggi), 'REPAIR' (memerlukan perbaikan ahli), atau 'UPCYCLE' (kerusakan struktural parah, material harus diolah kembali menjadi produk baru). Kembalikan objek JSON dengan format: { 'recommendation': 'RESELL'|'REPAIR'|'UPCYCLE', 'confidence': number (0-1), 'condition': { 'fabric': string, 'stain': string, 'damage': string, 'fading': string }, 'reasoning': string (detail teknis dalam Bahasa Indonesia), 'suggestedAction': string (dalam Bahasa Indonesia), 'environmentalImpact': { 'wasteReducedKg': number, 'co2SavedKg': number }, 'valuePotential': 'Low'|'Medium'|'High', 'recommendedPrice': string (format Rupiah, e.g., 'Rp 500.000 - Rp 750.000'), 'detectedFeatures': string[] (minimal 5 fitur unik dalam Bahasa Indonesia) }. Berikan estimasi harga yang realistis berdasarkan kelangkaan motif dan kondisi fisik kain." },
               ...imageParts
             ]
           }
@@ -517,7 +518,7 @@ export function AIAnalysis() {
                     onClick={handleSellOnMarketplace}
                     className="w-full py-6 bg-primary-900 text-white font-display text-xl font-black uppercase tracking-[0.2em] hover:bg-black transition-all group relative overflow-hidden modular-border disabled:opacity-50"
                   >
-                    <span className="relative z-10 transition-colors duration-500 group-hover:text-primary-900 flex items-center justify-center gap-3">
+                    <span className="relative z-10 transition-colors duration-500 group-hover:text-white flex items-center justify-center gap-3">
                       {isSaving ? (
                         <>
                           <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
