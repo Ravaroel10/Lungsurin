@@ -150,7 +150,7 @@ export const MOCK_ORDERS: Order[] = [
     shippingAddress: '123 Green St, Sustainability City',
     paymentMethod: 'DANA',
     items: [
-      { id: 'p1', name: 'Vintage Levi\'s Upcycled Denim Jacket', price: 450000, quantity: 1, image: 'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?q=80&w=800&auto=format&fit=crop' }
+      { id: 'p1', name: 'Vintage Levi\'s Upcycled Denim Jacket', price: 450000, quantity: 1, image: 'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?q=80&w=800&auto=format&fit=crop', sellerId: 's1' }
     ],
     total: 476000,
     subtotal: 450000,

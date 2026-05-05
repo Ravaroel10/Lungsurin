@@ -92,12 +92,14 @@ export interface Order {
     price: number;
     quantity: number;
     image: string;
+    sellerId: string;
   }[];
   total: number;
   subtotal: number;
   shippingFee: number;
   protectionFee: number;
   status: 'PROSES' | 'DIKIRIM' | 'SELESAI' | 'DIBATALKAN';
+  proofURL?: string;
   createdAt: any;
   trackingNumber?: string;
 }
@@ -105,9 +107,9 @@ export interface Order {
 export interface Message {
   id: string;
   senderId: string;
-  receiverId: string;
-  content: string;
-  timestamp: string;
+  text?: string;
+  image?: string;
+  createdAt: any;
   orderId?: string;
 }
 

@@ -21,6 +21,8 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { cn } from '../lib/utils';
 import { Link } from 'react-router-dom';
+import { collection, doc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { GoogleGenAI } from "@google/genai";
 import { PREMIUM_PRICE, PREMIUM_PRICE_FORMATTED } from '../constants';
 
@@ -146,32 +148,12 @@ export function PremiumHub() {
   const handleUpgrade = async (planId: string) => {
     if (!user) return;
     
-    setIsProcessingPayment(true);
-    try {
-      // Set status to pending first so the UI updates
-      await updateUser({ 
-        premiumStatus: 'pending'
-      });
-
-      // Prepare WhatsApp message
-      const message = `Halo Admin Lungsurin, saya ${user.fullName} ingin konfirmasi pembayaran untuk ${selectedPlan?.name}. Berikut bukti transfer saya.`;
-      const encodedMessage = encodeURIComponent(message);
-      const whatsappUrl = `https://wa.me/628119410609?text=${encodedMessage}`;
-      
-      // Redirect to WhatsApp
-      window.open(whatsappUrl, '_blank');
-      
-      setModalStep('waiting');
-    } catch (error) {
-      console.error("Upgrade error:", error);
-      (window as any).addNotification('Gagal memproses upgrade. Silakan coba lagi.', 'error');
-    } finally {
-      setIsProcessingPayment(false);
-    }
+    // Switch to upload step
+    setModalStep('upload');
   };
 
   const handleUploadProof = async () => {
-    if (!proofImage) {
+    if (!user || !proofImage) {
       (window as any).addNotification('Harap unggah bukti transfer Anda.', 'error');
       return;
     }
@@ -180,8 +162,35 @@ export function PremiumHub() {
     (window as any).addNotification('Mengirimkan bukti transfer...', 'info');
     
     try {
-      // Simulate verification delay
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      const batch = writeBatch(db);
+      
+      // Update user status
+      const userRef = doc(db, 'users', user.id);
+      batch.update(userRef, { 
+        premiumStatus: 'pending',
+        premiumProofURL: proofImage 
+      });
+
+      // Send chat message to Admin (using sellerId 's1' as demo admin)
+      const adminId = 's1'; 
+      const chatId = [user.id, adminId].sort().join('_');
+      const chatMsgRef = doc(collection(db, 'conversations', chatId, 'messages'));
+      const convRef = doc(db, 'conversations', chatId);
+
+      batch.set(convRef, {
+        participants: [user.id, adminId],
+        updatedAt: serverTimestamp(),
+        lastMessage: 'Sistem: Konfirmasi Pembayaran Premium',
+      }, { merge: true });
+
+      batch.set(chatMsgRef, {
+        text: `Halo Admin! Saya ${user.fullName} telah mentransfer untuk paket ${selectedPlan?.name}. Berikut bukti transfernya. Mohon verifikasi akun premium saya!`,
+        senderId: user.id,
+        image: proofImage,
+        createdAt: serverTimestamp()
+      });
+
+      await batch.commit();
       
       await updateUser({ 
         premiumStatus: 'pending',
@@ -189,7 +198,7 @@ export function PremiumHub() {
       });
       
       setModalStep('waiting');
-      (window as any).addNotification(`Bukti transfer berhasil dikirim ke tim verifikasi (rafa100609@gmail.com).`, 'success');
+      (window as any).addNotification(`Bukti transfer berhasil dikirim.`, 'success');
     } catch (error) {
       console.error("Upload proof error", error);
       (window as any).addNotification('Gagal mengirim bukti. Silakan coba lagi.', 'error');

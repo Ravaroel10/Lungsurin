@@ -55,7 +55,7 @@ export function AIChatbot({ variant = 'floating' }: AIChatbotProps) {
         try {
           const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
           const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-flash-preview',
             contents: [
               { role: 'user', parts: [{ text: `Anda adalah Lungsurin AI, asisten AI untuk Lungsurin, ekosistem fashion berkelanjutan. Jawab pertanyaan pengguna dalam bahasa Indonesia tentang keberlanjutan, daur ulang (upcycling), atau pasar sirkular kami. Tetaplah ramah dan ringkas. Pengguna mengatakan: ${msg}` }] }
             ]
@@ -83,10 +83,8 @@ export function AIChatbot({ variant = 'floating' }: AIChatbotProps) {
 
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
-      const model = 'gemini-2.5-flash';
-      
       const response = await ai.models.generateContent({
-        model,
+        model: 'gemini-3-flash-preview',
         contents: [
           { role: 'user', parts: [{ text: `Anda adalah Lungsurin AI, asisten AI untuk Lungsurin, ekosistem fashion berkelanjutan. Jawab pertanyaan pengguna dalam bahasa Indonesia tentang keberlanjutan, daur ulang (upcycling), atau pasar sirkular kami. Tetaplah ramah dan ringkas. Pengguna mengatakan: ${userMsg}` }] }
         ]

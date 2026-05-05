@@ -27,6 +27,7 @@ interface Order {
   items: OrderItem[];
   total: number;
   status: 'PROSES' | 'DIKIRIM' | 'SELESAI' | 'DIBATALKAN';
+  proofURL?: string;
   createdAt: any;
   subtotal: number;
   shippingFee: number;
@@ -321,11 +322,25 @@ export function Orders() {
                       <p className="text-xs font-black text-primary-950 uppercase tracking-widest">{selectedOrder.paymentMethod || 'COD'}</p>
                       <div className="flex items-center gap-2 mt-2 p-2 bg-primary-50 border border-primary-100 italic">
                         <Info size={12} className="text-primary-950" />
-                        <p className="text-[10px] font-medium leading-tight">Pastikan dana tersedia saat kurir tiba untuk metode COD.</p>
+                        <p className="text-[10px] font-medium leading-tight">
+                          {selectedOrder.paymentMethod === 'TRANSFER' ? 'Pembayaran telah diverifikasi via Bukti Transfer.' : 'Pastikan dana tersedia saat kurir tiba untuk metode COD.'}
+                        </p>
                       </div>
                     </div>
                   </div>
                 </div>
+
+                {selectedOrder.proofURL && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck size={16} className="text-emerald-500" />
+                      <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary-950">Bukti Transfer</h4>
+                    </div>
+                    <div className="border-2 border-primary-950 bg-white p-2 shadow-[4px_4px_0px_rgba(0,0,0,1)]">
+                       <img src={selectedOrder.proofURL} alt="Bukti Transfer" className="w-full max-h-[300px] object-contain" />
+                    </div>
+                  </div>
+                )}
 
                 {/* Items */}
                 <div className="space-y-4">

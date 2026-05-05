@@ -116,10 +116,10 @@ export function AIAnalysis() {
         }
       }));
 
-      const prompt = "Anda adalah pakar kurator tekstil tradisional Indonesia. Analisis 2 foto pakaian adat ini (tampak depan dan belakang) dengan ketelitian sangat tinggi. GUNAKAN BAHASA INDONESIA UNTUK SEMUA FIELD TEKS. Identifikasi jenis kain (Batik, Tenun, Songket, dll.), motif spesifik, dan teknik pembuatannya. Periksa tanda-tanda kerusakan mikroskopis seperti serat yang putus, kelunturan warna, noda teknis, atau robekan pada jahitan tradisional. Klasifikasikan ke dalam jalur sirkular: 'RESELL', 'REPAIR', atau 'UPCYCLE'. Berikan estimasi harga yang realistis dalam rentang Rp 100.000 - Rp 500.000 berdasarkan kelangkaan motif dan kondisi fisik kain.";
+      const prompt = "Anda adalah pakar kurator tekstil tradisional Indonesia. Analisis 2 foto pakaian adat ini (tampak depan dan belakang) dengan ketelitian sangat tinggi. GUNAKAN BAHASA INDONESIA UNTUK SEMUA FIELD TEKS. Identifikasi jenis kain (Batik, Tenun, Songket, dll.), motif spesifik, dan teknik pembuatannya. Periksa tanda-tanda kerusakan mikroskopis seperti serat yang putus, kelunturan warna, noda teknis, atau robekan pada jahitan tradisional. Klasifikasikan ke dalam jalur sirkular: 'RESELL', 'REPAIR', atau 'UPCYCLE'. Berikan estimasi harga yang sangat realistis berdasarkan kualitas: produk standar di rentang Rp 100.000 - Rp 300.000, produk premium/langka/tulis di rentang Rp 300.000 - Rp 800.000. Sesuaikan harga dengan kondisi fisik kain.";
 
       const response = await ai.models.generateContent({
-        model: 'gemini-flash-latest',
+        model: "gemini-3-flash-preview",
         contents: [{
           parts: [{ text: prompt }, ...imageParts]
         }],

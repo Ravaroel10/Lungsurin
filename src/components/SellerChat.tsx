@@ -128,11 +128,16 @@ export function SellerChat({ isOpen, onClose, storeName, sellerId }: { isOpen: b
               messages.map((msg) => (
                 <div key={msg.id} className={cn("flex flex-col max-w-[85%]", msg.senderId === user?.id ? 'ml-auto items-end' : 'mr-auto items-start')}>
                   <div className={cn(
-                    "px-4 py-2.5 text-sm leading-relaxed shadow-sm",
+                    "px-4 py-2.5 text-sm leading-relaxed shadow-sm flex flex-col gap-2",
                     msg.senderId === user?.id 
                       ? 'bg-primary-900 text-white font-medium modular-border border-none' 
                       : 'bg-white border-2 border-primary-950/10 text-primary-950 font-medium'
                   )}>
+                    {msg.image && (
+                      <div className="w-full max-w-[240px] aspect-square rounded-sm overflow-hidden border border-black/10">
+                        <img src={msg.image} alt="Bukti Transfer" className="w-full h-full object-cover" />
+                      </div>
+                    )}
                     {msg.text}
                   </div>
                   <span className="text-[9px] text-primary-950/40 uppercase font-black tracking-widest mt-1.5 px-1 font-mono">

@@ -15,6 +15,7 @@ export function Checkout() {
   const location = useLocation();
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderMessage, setOrderMessage] = useState('');
+  const [proofImage, setProofImage] = useState<string | null>(null);
   
   const selectedItemIds: string[] = location.state?.selectedItemIds || [];
   
@@ -34,12 +35,33 @@ export function Checkout() {
 
   const hasAddress = user?.address && user.address.trim().length > 10;
 
+  const handleProofSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      (window as any).addNotification('Ukuran file terlalu besar (maks 2MB)', 'error');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setProofImage(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handlePlaceOrder = async () => {
     if (!user) return;
     
     if (!hasAddress) {
       (window as any).addNotification('Silakan lengkapi alamat pengiriman di profil Anda sebelum memesan.', 'error');
       navigate('/profile');
+      return;
+    }
+
+    if (!proofImage) {
+      (window as any).addNotification('Silakan unggah bukti transfer terlebih dahulu.', 'error');
       return;
     }
 
@@ -50,6 +72,7 @@ export function Checkout() {
       const batch = writeBatch(db);
       
       const orderRef = doc(collection(db, 'orders'));
+      const orderId = orderRef.id;
       const orderData = {
         userId: user.id,
         customerName: user.fullName || 'Rafael Gultom',
@@ -61,18 +84,43 @@ export function Checkout() {
           name: item.name,
           quantity: item.quantity,
           price: item.price,
-          image: item.images[0]
+          image: item.images[0],
+          sellerId: item.sellerId || 's1'
         })),
         subtotal,
         protectionFee,
         shippingFee,
         total,
         status: 'PROSES',
-        paymentMethod: 'COD',
+        paymentMethod: 'TRANSFER',
+        proofURL: proofImage,
         createdAt: serverTimestamp()
       };
       
       batch.set(orderRef, orderData);
+
+      // Send chat messages to sellers
+      const sellers = Array.from(new Set(checkoutItems.map(item => item.sellerId || 's1')));
+      
+      for (const sellerId of sellers) {
+        const chatId = [user.id, sellerId].sort().join('_');
+        const chatMsgRef = doc(collection(db, 'conversations', chatId, 'messages'));
+        const convRef = doc(db, 'conversations', chatId);
+
+        // Ensure conversation exists
+        batch.set(convRef, {
+          participants: [user.id, sellerId],
+          updatedAt: serverTimestamp(),
+          lastMessage: 'Sistem: Bukti Transfer Pesanan Baru',
+        }, { merge: true });
+
+        batch.set(chatMsgRef, {
+          text: `Halo Penjual! Saya telah melakukan pemesanan (Order ID: #${orderId.slice(-6)}). Berikut adalah bukti transfernya. Mohon segera diproses ya!`,
+          senderId: user.id,
+          image: proofImage,
+          createdAt: serverTimestamp()
+        });
+      }
       
       let totalQuantityBought = 0;
       checkoutItems.forEach((item) => {
@@ -233,19 +281,81 @@ export function Checkout() {
           </div>
         </div>
 
-        {/* Totals Section */}
-        <div className="bg-white border shadow-[0_2px_4px_rgba(0,0,0,0.05)] rounded-sm p-8 flex flex-col items-end gap-6">
-          <div className="flex items-baseline gap-4 w-full justify-end">
-            <span className="text-primary-950/60 font-bold uppercase text-[10px] tracking-widest">Total Pesanan ({checkoutItems.length} Produk):</span>
-            <span className="text-xl font-black text-[#D0021B]">{formatRp(total)}</span>
+        {/* Payment & Totals Section */}
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="bg-white border shadow-[0_2px_4px_rgba(0,0,0,0.05)] rounded-sm p-8 flex flex-col gap-6">
+            <div className="flex items-center gap-2 text-primary-950 font-black uppercase tracking-widest text-sm mb-2">
+              <CreditCard size={16} strokeWidth={3} className="text-primary-500" />
+              Metode Pembayaran
+            </div>
+            
+            <div className="bg-primary-50 p-6 border-2 border-primary-950/10 space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase tracking-widest text-primary-500">Transfer Bank (BCA)</span>
+                <span className="text-xs font-black text-primary-950">MANUAL TRANSFER</span>
+              </div>
+              
+              <div className="p-4 bg-white border-2 border-primary-950 flex flex-col items-center justify-center gap-2">
+                 <p className="text-[10px] font-bold text-primary-400 uppercase tracking-widest">Nomor Rekening</p>
+                 <p className="text-2xl font-mono font-black text-primary-950 tracking-tighter">7402 1898 62</p>
+                 <p className="text-[10px] font-black text-primary-950 uppercase tracking-widest text-center">A.N. RAFAEL ALVARO DANIEL GULTOM</p>
+              </div>
+
+              <div className="relative group">
+                <input 
+                  type="file" 
+                  id="checkout-proof"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleProofSelect}
+                />
+                <label 
+                  htmlFor="checkout-proof"
+                  className="w-full border-2 border-dashed border-primary-950/20 bg-white p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-primary-50 transition-all overflow-hidden min-h-[100px]"
+                >
+                  {proofImage ? (
+                    <div className="relative w-full aspect-video">
+                      <img src={proofImage} className="w-full h-full object-contain" alt="Proof" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[10px] font-black uppercase transition-opacity">Ganti Bukti</div>
+                    </div>
+                  ) : (
+                    <>
+                      <MailPlus className="text-primary-950/40 mb-2" size={24} />
+                      <span className="text-[9px] font-black uppercase tracking-widest text-primary-950/60 text-center">Klik untuk unggah Bukti Transfer (Wajib)</span>
+                    </>
+                  )}
+                </label>
+              </div>
+            </div>
           </div>
-          <button 
-            onClick={handlePlaceOrder}
-            disabled={isProcessing}
-            className="bg-[#D0021B] text-white px-16 py-4 font-black uppercase tracking-[0.2em] text-sm hover:opacity-90 transition-all border-none min-w-[280px] shadow-[0_4px_10px_rgba(208,2,27,0.2)]"
-          >
-            {isProcessing ? 'Memproses...' : 'Buat Pesanan'}
-          </button>
+
+          <div className="bg-white border shadow-[0_2px_4px_rgba(0,0,0,0.05)] rounded-sm p-8 flex flex-col items-end gap-6 justify-between">
+            <div className="w-full space-y-4">
+              <div className="flex justify-between items-center text-primary-950/60 font-bold uppercase text-[10px] tracking-widest">
+                <span>Subtotal Produk</span>
+                <span>{formatRp(subtotal)}</span>
+              </div>
+              <div className="flex justify-between items-center text-primary-950/60 font-bold uppercase text-[10px] tracking-widest">
+                <span>Total Ongkos Kirim</span>
+                <span>{formatRp(shippingFee)}</span>
+              </div>
+              <div className="flex justify-between items-center text-primary-950/60 font-bold uppercase text-[10px] tracking-widest">
+                <span>Biaya Layanan</span>
+                <span>{formatRp(protectionFee)}</span>
+              </div>
+              <div className="border-t border-dashed border-primary-950/20 pt-4 flex items-baseline gap-4 w-full justify-between">
+                <span className="text-primary-950 font-black uppercase text-xs tracking-widest">Total Pembayaran:</span>
+                <span className="text-2xl font-black text-[#D0021B]">{formatRp(total)}</span>
+              </div>
+            </div>
+            <button 
+              onClick={handlePlaceOrder}
+              disabled={isProcessing}
+              className="bg-[#D0021B] text-white px-16 py-4 font-black uppercase tracking-[0.2em] text-sm hover:opacity-90 transition-all border-none w-full shadow-[0_4px_10px_rgba(208,2,27,0.2)] disabled:opacity-50"
+            >
+              {isProcessing ? 'Memproses...' : 'Buat Pesanan & Kirim Bukti'}
+            </button>
+          </div>
         </div>
 
       </div>
